@@ -1,16 +1,18 @@
 import { createStore } from 'vuex'
 
-const load = k => JSON.parse(localStorage.getItem(k) || 'null')
+const load = (k, fallback) => {
+  try { return JSON.parse(localStorage.getItem(k)) ?? fallback } catch { return fallback }
+}
 const save = (k, v) => localStorage.setItem(k, JSON.stringify(v))
 
 export default createStore({
   state: () => ({
-    plants: load('plants') || [],
-    tempPlant: load('tempPlant') || null, // holds camera/scan result
+    plants: load('plants', []),
+    tempPlant: load('tempPlant', null)
   }),
   getters: {
     allPlants: s => s.plants,
-    tempPlant: s => s.tempPlant,
+    tempPlant: s => s.tempPlant
   },
   mutations: {
     setTempPlant(state, payload) {
@@ -25,10 +27,27 @@ export default createStore({
       state.plants.push(plant)
       save('plants', state.plants)
     },
-    updatePlant(state, updated) {
-      const i = state.plants.findIndex(p => p.id === updated.id)
-      if (i !== -1) state.plants[i] = updated
-      save('plants', state.plants)
-    }
+    removePlant(state, id) {
+      state.plants = state.plants.filter(p => p.id !== id)
+      localStorage.setItem('plants', JSON.stringify(state.plants))
+    },
+    updatePlantPosition(state, { id, x, y }) {
+      const i = state.plants.findIndex(p => p.id === id)
+      if (i !== -1) {
+        state.plants[i] = { ...state.plants[i], x, y }
+        localStorage.setItem('plants', JSON.stringify(state.plants))
+      }
+    },
+    setAllUnwatered(state) {
+      state.plants = state.plants.map(p => ({ ...p, watered: false }))
+      localStorage.setItem('plants', JSON.stringify(state.plants))
+    },
+    waterPlant(state, id) {
+      const i = state.plants.findIndex(p => p.id === id)
+      if (i !== -1) {
+        state.plants[i] = { ...state.plants[i], watered: true }
+        localStorage.setItem('plants', JSON.stringify(state.plants))
+      }
+    },
   }
 })
