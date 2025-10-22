@@ -10,7 +10,9 @@
       </div>
     </div>
 
-    <button @click="sendTestPush" class="btn btn-secondary">Send test push</button>
+    <div class="dev-panel">
+      <button @click="sendTestPush" class="btn btn-secondary">Send test push</button>
+    </div>
 
     <!-- Floating buttons -->
     <div class="fab-wrap">
@@ -232,5 +234,12 @@ body,
   background: transparent;
   color: #6b7280;
   text-decoration: underline;
+}
+
+.dev-panel{
+  position: fixed;
+  right: 16px;
+  bottom: 100px;   /* sit above your FABs */
+  z-index: 10000;  /* above the fixed background */
 }
 </style>
