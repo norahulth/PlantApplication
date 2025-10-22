@@ -154,24 +154,58 @@ body,
   }
 }
 
-.push-banner{
+.push-banner {
   position: fixed;
+  top: 50%;
   left: 50%;
-  bottom: 16px;
-  transform: translateX(-50%);
-  background: rgba(17, 24, 39, 0.96); /* gray-900 */
-  color:#fff;
-  padding:10px 14px;
-  border-radius:12px;
-  box-shadow: 0 10px 24px rgba(0,0,0,.25);
-  display:flex;
-  gap:12px;
-  align-items:center;
+  transform: translate(-50%, -50%); /* Center horizontally + vertically */
+  background: #ffffff;              /* white background */
+  color: #1f2937;                   /* dark text */
+  padding: 24px 28px;
+  border-radius: 16px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;           /* stack text and buttons */
+  gap: 16px;
+  align-items: center;
+  text-align: center;
+  max-width: 90%;
+  width: 320px;
   z-index: 9999;
 }
-.push-banner .actions{
-  display:flex;
-  gap:8px;
-  align-items:center;
+
+/* Style for the text and buttons */
+.push-banner span {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.push-banner .actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.push-banner button {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.push-banner .btn-success {
+  background: #4caf50;
+  color: white;
+}
+
+.push-banner .btn-success:hover {
+  background: #3e9143;
+}
+
+.push-banner .btn-link {
+  background: transparent;
+  color: #6b7280;
+  text-decoration: underline;
 }
 </style>
