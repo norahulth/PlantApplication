@@ -90,27 +90,36 @@ export default {
     },
 
     async sendTestPush() {
-    try {
-      const reg = await navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.getSubscription();
-      if (!sub) { alert('Not subscribed yet. Tap Enable first.'); return; }
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    if (!sub) { alert('Not subscribed yet. Tap Enable first.'); return; }
 
-      const res = await fetch('/api/push/test', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-push-secret': import.meta.env.VITE_PUSH_SECRET
-        },
-        body: JSON.stringify({ subscription: sub, title: 'Test push ✅', body: 'Push works!' })
-      });
-      const json = await res.json();
-      console.log(json);
-      if (!res.ok) alert('Test failed: ' + (json.error || res.status));
-    } catch (e) {
-      console.error(e);
-      alert('Test failed: ' + e);
+    const res = await fetch('/api/push/test', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-push-secret': import.meta.env.VITE_PUSH_SECRET
+      },
+      body: JSON.stringify({ subscription: sub, title: 'Test push ✅', body: 'Push works!' })
+    });
+    const json = await res.json();
+    console.log('test response:', res.status, json);
+
+    if (!res.ok) {
+      alert(`Test failed: status ${res.status}\n` +
+            `message: ${json.message || json.error || 'unknown'}\n` +
+            `statusCode: ${json.statusCode ?? 'n/a'}\n` +
+            `body: ${json.body ?? 'n/a'}`);
+      return;
     }
-  },
+    alert('Sent! Check your notifications.');
+  } catch (e) {
+    console.error(e);
+    alert('Test failed: ' + e);
+  }
+},
+
 
     dismissPush() {
       this.showPushPrompt = false;
