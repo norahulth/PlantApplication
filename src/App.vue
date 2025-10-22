@@ -6,7 +6,7 @@
       <span>Enable daily plant reminders?</span>
       <div class="actions">
         <button class="btn btn-success btn-sm" @click="enablePush">Enable</button>
-        <button class="btn btn-link btn-sm text-light" @click="dismissPush">Not now</button>
+        <button class="btn btn-link btn-sm" @click="dismissPush">Not now</button>
       </div>
     </div>
 
