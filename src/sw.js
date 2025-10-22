@@ -1,15 +1,19 @@
+// src/sw.js
 import { precacheAndRoute } from 'workbox-precaching'
-self.__WB_MANIFEST && precacheAndRoute(self.__WB_MANIFEST)
 
-// receive push and show a notification
+// 👇 EXACTLY ONE occurrence of this placeholder
+precacheAndRoute(self.__WB_MANIFEST)
+
+// ---- your custom code below ----
 self.addEventListener('push', (event) => {
-  const data = event.data?.json?.() ?? {}
-  const title = data.title || 'PlantApplication'
+  let data = {}
+  try { data = event.data?.json() ?? {} } catch {}
+  const title = data.title || 'Plant Application'
   const options = {
     body: data.body || 'New update',
     icon: '/pwa-192x192.png',
     badge: '/pwa-192x192.png',
-    data: { url: data.url || '/' }
+    data: { url: data.url || '/' },
   }
   event.waitUntil(self.registration.showNotification(title, options))
 })
