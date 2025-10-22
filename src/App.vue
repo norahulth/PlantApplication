@@ -3,15 +3,20 @@
     <router-view />
 
   <!-- Push soft-ask -->
-  <div v-if="showPushPrompt" class="push-banner" @click.stop>
-    <span>Enable daily plant reminders?</span>
-    <div class="actions">
-      <button class="btn btn-success btn-sm" @click="enablePush" :disabled="notifBusy">
-        {{ notifBusy ? 'Please wait…' : 'Enable' }}
+  <!-- Push soft-ask modal -->
+<div v-if="showPushPrompt" class="push-overlay">
+  <div class="push-modal" @click.stop>
+    <div class="push-text">Enable daily plant reminders?</div>
+
+    <div class="push-actions">
+      <button class="btn btn-enable" @click="enablePush" :disabled="notifBusy">
+        {{ notifBusy ? 'Please wait…' : 'Enable notifications' }}
       </button>
-      <button class="btn btn-link btn-sm" @click="dismissPush">Not now</button>
+      <button class="btn btn-cancel" @click="dismissPush">Not now</button>
     </div>
   </div>
+</div>
+
 
 
     <!-- Floating buttons -->
@@ -186,27 +191,84 @@ body,
     transition: none;
   }
 }
-.push-banner {
+/* Overlay covers full screen */
+.push-overlay {
   position: fixed;
-  left: 50%;
-  bottom: 16px;
-  transform: translateX(-50%);
-  width: min(92vw, 560px);
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  box-shadow: 0 10px 28px rgba(0,0,0,.12);
-  padding: 10px 12px;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  z-index: 1100;
+  justify-content: center;
+  z-index: 1200;
+  padding: 16px;
 }
 
-.push-banner .actions {
+/* Modal box in the center */
+.push-modal {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18);
+  width: min(90vw, 400px);
+  padding: 24px 20px;
+  text-align: center;
+  animation: fadeInScale 0.25s ease;
+}
+
+.push-text {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 18px;
+}
+
+.push-actions {
   display: flex;
-  gap: 8px;
-  align-items: center;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+}
+
+/* Buttons */
+.btn {
+  border: none;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-enable {
+  background: #4caf50;
+  color: #fff;
+}
+.btn-enable:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: #43a047;
+}
+.btn-enable:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-cancel {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+.btn-cancel:hover {
+  background: #cbd5e1;
+}
+
+/* subtle entrance animation */
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 </style>
