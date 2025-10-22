@@ -6,7 +6,6 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_KV_REST_API_TOKEN,
 })
 
-// VAPID config
 webpush.setVapidDetails(
   'mailto:hello@plantapp.com',
   process.env.VAPID_PUBLIC_KEY,
@@ -14,20 +13,34 @@ webpush.setVapidDetails(
 )
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
 
-  const payload = req.body && typeof req.body === 'object'
-    ? req.body
-    : { title: 'PlantApp', body: 'Hello!', url: '/' }
+  // Normalize body -> JSON string
+  let bodyObj
+  try {
+    // if req.body is a string, parse; if object, use as is
+    bodyObj = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
+  } catch {
+    // ignore parse error, we’ll fall back to default payload
+  }
+  if (!bodyObj || typeof bodyObj !== 'object') {
+    bodyObj = { title: 'PlantApp', body: 'Hello!', url: '/' }
+  }
+  const payloadStr = JSON.stringify({
+    title: String(bodyObj.title ?? 'PlantApp'),
+    body: String(bodyObj.body ?? ''),
+    url: String(bodyObj.url ?? '/'),
+  })
 
-  // sanity checks
   if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
     return res.status(500).json({ error: 'Missing VAPID keys on server' })
   }
 
   try {
     const subs = await redis.smembers('push:subs')
-    if (!subs || subs.length === 0) {
+    if (!subs?.length) {
       return res.status(200).json({ sent: 0, reason: 'no-subscriptions' })
     }
 
@@ -36,23 +49,21 @@ export default async function handler(req, res) {
 
     for (const raw of subs) {
       try {
-        const sub = JSON.parse(raw)
-        await webpush.sendNotification(sub, JSON.stringify(payload))
+        const sub = typeof raw === 'string' ? JSON.parse(raw) : raw
+        await webpush.sendNotification(sub, payloadStr)
         sent++
       } catch (e) {
-        // Clean up dead subs
+        // Remove dead subs; collect other errors
         if (e.statusCode === 404 || e.statusCode === 410) {
           await redis.srem('push:subs', raw)
         } else {
           errors.push(e.message || String(e))
-          console.error('Push error:', e)
         }
       }
     }
 
-    return res.status(200).json({ sent, total: subs.length, errors })
+    return res.status(200).json({ sent, total: subs.length, payload: payloadStr, errors })
   } catch (e) {
-    console.error('Send handler error:', e)
-    return res.status(500).json({ error: 'Failed to send push' })
+    return res.status(500).json({ error: 'Failed to send push', detail: e.message })
   }
 }
