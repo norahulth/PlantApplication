@@ -13,6 +13,7 @@ export default defineConfig({
     vue(),
     VitePWA({
       registerType: 'autoUpdate',
+      devOptions: { enabled: true }, // enables SW in `vite dev`
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
         name: 'Plant Application',
@@ -41,7 +42,10 @@ export default defineConfig({
             purpose: 'any maskable'
           }
         ]
-      }
+      },
+      srcDir: 'src',
+      filename: 'sw.js',
+      strategies: 'injectManifest'
     })
   ],
   preview: {
