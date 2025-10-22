@@ -2,6 +2,14 @@
   <div class="app-shell">
     <router-view />
 
+    <div v-if="showPushPrompt" class="push-banner">
+      <span>Enable daily plant reminders?</span>
+      <div class="actions">
+        <button class="btn btn-success btn-sm" @click="enablePush">Enable</button>
+        <button class="btn btn-link btn-sm text-light" @click="dismissPush">Not now</button>
+      </div>
+    </div>
+
     <!-- Floating buttons -->
     <div class="fab-wrap">
       <!-- Plus button -->
@@ -41,16 +49,45 @@
 </template>
 
 <script>
+import { ensurePushSubscribed } from "@/push"; // <-- make sure src/push.js exists as we set up
 import "bootstrap";
 
 export default {
   name: "App",
-  components: {},
-  data: () => ({}),
-  mounted() {},
+  data() {
+    return {
+      showPushPrompt: false
+    };
+  },
+  mounted() {
+    // Show the banner only if notifications aren’t granted yet
+    if (typeof window !== "undefined" && "Notification" in window) {
+      const alreadyAsked = localStorage.getItem("pushPromptDismissed") === "1";
+      this.showPushPrompt = !alreadyAsked && Notification.permission !== "granted";
+    }
+  },
   methods: {
     redirect(target) {
       this.$router.push(target).catch((e) => console.log(e.message));
+    },
+
+    async enablePush() {
+      const result = await ensurePushSubscribed();
+      // hide if granted or already subscribed
+      if (result?.ok || result?.status === "granted" || result?.status === "already") {
+        this.showPushPrompt = false;
+        localStorage.setItem("pushPromptDismissed", "1");
+      } else {
+        // If user blocked or closed prompt, don’t nag until next visit
+        this.showPushPrompt = false;
+        localStorage.setItem("pushPromptDismissed", "1");
+        console.warn("[push] Not enabled:", result);
+      }
+    },
+
+    dismissPush() {
+      this.showPushPrompt = false;
+      localStorage.setItem("pushPromptDismissed", "1");
     },
   },
 };
@@ -115,5 +152,26 @@ body,
   .fab {
     transition: none;
   }
+}
+
+.push-banner{
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  background: rgba(17, 24, 39, 0.96); /* gray-900 */
+  color:#fff;
+  padding:10px 14px;
+  border-radius:12px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.25);
+  display:flex;
+  gap:12px;
+  align-items:center;
+  z-index: 9999;
+}
+.push-banner .actions{
+  display:flex;
+  gap:8px;
+  align-items:center;
 }
 </style>
