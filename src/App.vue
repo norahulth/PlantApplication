@@ -2,18 +2,6 @@
   <div class="app-shell">
     <router-view />
 
-    <div v-if="showPushPrompt" class="push-banner">
-      <span>Enable daily plant reminders?</span>
-      <div class="actions">
-        <button class="btn btn-success btn-sm" @click="enablePush">Enable</button>
-        <button class="btn btn-link btn-sm" @click="dismissPush">Not now</button>
-      </div>
-    </div>
-
-    <div class="dev-panel">
-      <button @click="sendTestPush" class="btn btn-secondary">Send test push</button>
-    </div>
-
     <!-- Floating buttons -->
     <div class="fab-wrap">
       <!-- Plus button -->
@@ -54,76 +42,15 @@
 
 <script>
 import "bootstrap";
-import { ensurePushSubscribed } from './push.js';
 
 export default {
   name: "App",
-  data() {
-    return {
-      showPushPrompt: false
-    };
-  },
-  mounted() {
-    // Show the banner only if notifications aren’t granted yet
-    if (typeof window !== "undefined" && "Notification" in window) {
-      const alreadyAsked = localStorage.getItem("pushPromptDismissed") === "1";
-      this.showPushPrompt = !alreadyAsked && Notification.permission !== "granted";
-    }
-  },
+  components: {},
+  data: () => ({}),
+  mounted() {},
   methods: {
     redirect(target) {
       this.$router.push(target).catch((e) => console.log(e.message));
-    },
-
-    async enablePush() {
-      const result = await ensurePushSubscribed();
-      // hide if granted or already subscribed
-      if (result?.ok || result?.status === "granted" || result?.status === "already") {
-        this.showPushPrompt = false;
-        localStorage.setItem("pushPromptDismissed", "1");
-      } else {
-        // If user blocked or closed prompt, don’t nag until next visit
-        this.showPushPrompt = false;
-        localStorage.setItem("pushPromptDismissed", "1");
-        console.warn("[push] Not enabled:", result);
-      }
-    },
-
-    async sendTestPush() {
-  try {
-    const reg = await navigator.serviceWorker.ready;
-    const sub = await reg.pushManager.getSubscription();
-    if (!sub) { alert('Not subscribed yet. Tap Enable first.'); return; }
-
-    const res = await fetch('/api/push/test', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-push-secret': import.meta.env.VITE_PUSH_SECRET
-      },
-      body: JSON.stringify({ subscription: sub, title: 'Test push ✅', body: 'Push works!' })
-    });
-    const json = await res.json();
-    console.log('test response:', res.status, json);
-
-    if (!res.ok) {
-      alert(`Test failed: status ${res.status}\n` +
-            `message: ${json.message || json.error || 'unknown'}\n` +
-            `statusCode: ${json.statusCode ?? 'n/a'}\n` +
-            `body: ${json.body ?? 'n/a'}`);
-      return;
-    }
-    alert('Sent! Check your notifications.');
-  } catch (e) {
-    console.error(e);
-    alert('Test failed: ' + e);
-  }
-},
-
-
-    dismissPush() {
-      this.showPushPrompt = false;
-      localStorage.setItem("pushPromptDismissed", "1");
     },
   },
 };
@@ -188,67 +115,5 @@ body,
   .fab {
     transition: none;
   }
-}
-
-.push-banner {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%); /* Center horizontally + vertically */
-  background: #ffffff;              /* white background */
-  color: #1f2937;                   /* dark text */
-  padding: 24px 28px;
-  border-radius: 16px;
-  box-shadow: 0 12px 32px rgba(0,0,0,0.15);
-  display: flex;
-  flex-direction: column;           /* stack text and buttons */
-  gap: 16px;
-  align-items: center;
-  text-align: center;
-  max-width: 90%;
-  width: 320px;
-  z-index: 9999;
-}
-
-/* Style for the text and buttons */
-.push-banner span {
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-
-.push-banner .actions {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-}
-
-.push-banner button {
-  padding: 8px 14px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.push-banner .btn-success {
-  background: #4caf50;
-  color: white;
-}
-
-.push-banner .btn-success:hover {
-  background: #3e9143;
-}
-
-.push-banner .btn-link {
-  background: transparent;
-  color: #6b7280;
-  text-decoration: underline;
-}
-
-.dev-panel{
-  position: fixed;
-  right: 16px;
-  bottom: 100px;   /* sit above your FABs */
-  z-index: 10000;  /* above the fixed background */
 }
 </style>
