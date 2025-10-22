@@ -13,7 +13,14 @@ cleanupOutdatedCaches()
 
 // SPA navigation fallback to /index.html
 const handler = createHandlerBoundToURL('/index.html')
-registerRoute(new NavigationRoute(handler))
+registerRoute(
+  new NavigationRoute(handler, {
+    denylist: [
+      /^\/api\//,                                  // ← don't intercept API
+      /\/.*\.(?:png|jpg|jpeg|webp|svg|ico|json|woff2|txt|xml)$/ // real files
+    ]
+  })
+)
 
 // ---- Your push handlers (unchanged) ----
 self.addEventListener('push', (event) => {
