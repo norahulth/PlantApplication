@@ -1,6 +1,6 @@
 // /api/push/subscribe.js
 const webpush = require('web-push')
-const { addSubscription } = require('./_store.js')
+const { addSubscription } = require('./store.js')
 
 // Set VAPID only if both keys exist (prevents runtime throw)
 if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
