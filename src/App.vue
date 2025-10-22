@@ -49,8 +49,8 @@
 </template>
 
 <script>
-import { ensurePushSubscribed } from "@/push"; // <-- make sure src/push.js exists as we set up
 import "bootstrap";
+import { ensurePushSubscribed } from './push.js';
 
 export default {
   name: "App",
