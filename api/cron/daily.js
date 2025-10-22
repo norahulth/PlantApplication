@@ -1,6 +1,6 @@
 // api/cron/daily.js
 const webpush = require('web-push')
-const { listSubscriptions, removeSubscription } = require('../push/_store.js')
+const { listSubscriptions, removeSubscription } = require('../push/store.js')
 
 module.exports = async function handler(req, res) {
   try {
