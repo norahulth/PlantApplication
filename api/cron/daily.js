@@ -10,7 +10,7 @@ webpush.setVapidDetails(
 export default async function handler(_req, res) {
   const subs = await listSubscriptions()
   const payload = JSON.stringify({
-    title: 'TEST Time to water your plants 🌱',
+    title: 'Time to water your plants 🌱',
     body: 'Give your green buddies a sip!',
     tag: 'daily-water'
   })
