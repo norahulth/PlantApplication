@@ -10,6 +10,8 @@
       </div>
     </div>
 
+    <button @click="sendTestPush" class="btn btn-secondary">Send test push</button>
+
     <!-- Floating buttons -->
     <div class="fab-wrap">
       <!-- Plus button -->
@@ -84,6 +86,29 @@ export default {
         console.warn("[push] Not enabled:", result);
       }
     },
+
+    async sendTestPush() {
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      if (!sub) { alert('Not subscribed yet. Tap Enable first.'); return; }
+
+      const res = await fetch('/api/push/test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-push-secret': import.meta.env.VITE_PUSH_SECRET
+        },
+        body: JSON.stringify({ subscription: sub, title: 'Test push ✅', body: 'Push works!' })
+      });
+      const json = await res.json();
+      console.log(json);
+      if (!res.ok) alert('Test failed: ' + (json.error || res.status));
+    } catch (e) {
+      console.error(e);
+      alert('Test failed: ' + e);
+    }
+  },
 
     dismissPush() {
       this.showPushPrompt = false;
