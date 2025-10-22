@@ -4,7 +4,8 @@
     "bootstrap": "^5.3.3",
     "vue": "^3.2.47",
     "vue-router": "^4.1.6",
-    "vuex": "^4.1.0"
+    "vuex": "^4.1.0",
+    "web-push": "^3.6.7"
   },
   "description": "",
   "devDependencies": {

@@ -10,6 +10,14 @@
         ]
       },
       {
+        "crons": [
+          {
+            "path": "/api/cron/daily",
+            "schedule": "1 2 * * *"
+          }
+        ]
+      },      
+      {
         "source": "/sw.js",
         "headers": [
           {
