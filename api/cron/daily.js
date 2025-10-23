@@ -15,9 +15,9 @@ webpush.setVapidDetails(
 
 export default async function handler(req, res) {
   // Allow Vercel Cron (GET with header) OR manual secret in Authorization
-  const isCron = req.headers['x-vercel-cron'] === '1'
-  const okBySecret = req.headers.authorization === `Bearer ${process.env.PUSH_SECRET}`
-  if (!isCron && !okBySecret) return res.status(403).json({ error: 'forbidden' })
+  // const isCron = req.headers['x-vercel-cron'] === '1'
+  // const okBySecret = req.headers.authorization === `Bearer ${process.env.PUSH_SECRET}`
+  // if (!isCron && !okBySecret) return res.status(403).json({ error: 'forbidden' })
 
   // Build a clean JSON string payload (NEVER pass an object to web-push)
   const bodyObj = {
