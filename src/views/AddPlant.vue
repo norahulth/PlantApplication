@@ -120,6 +120,53 @@ export default {
       this.mode = "none";
     },
 
+    async resizeImageFile(file, maxSize = 1024, quality = 0.8) {
+  // returns a data URL "data:image/jpeg;base64,..."
+  // scaled so that max(width, height) <= maxSize
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const img = new Image();
+
+      img.onload = () => {
+        const origW = img.width;
+        const origH = img.height;
+
+        let targetW = origW;
+        let targetH = origH;
+
+        const longestSide = Math.max(origW, origH);
+        if (longestSide > maxSize) {
+          const scale = maxSize / longestSide;
+          targetW = Math.round(origW * scale);
+          targetH = Math.round(origH * scale);
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = targetW;
+        canvas.height = targetH;
+        const ctx = canvas.getContext("2d");
+
+        ctx.drawImage(img, 0, 0, targetW, targetH);
+
+        const dataUrl = canvas.toDataURL("image/jpeg", quality); // compress
+        resolve(dataUrl);
+      };
+
+      img.onerror = (err) => reject(err);
+
+      img.src = reader.result; // this is the original big dataURL
+    };
+
+    reader.onerror = (err) => reject(err);
+
+    reader.readAsDataURL(file);
+  });
+},
+
+
     // ----- Manual flow: species comes from the input -----
     saveManual() {
       const species = this.manualSpecies.trim();
@@ -137,43 +184,52 @@ export default {
 
     // ----- Camera flow -----
     async onFile(e) {
-      const file = e.target.files?.[0];
-      if (!file) return;
+  const file = e.target.files?.[0];
+  if (!file) return;
 
-      // 1. Read file as base64 data URL (you already had this)
-      const reader = new FileReader();
-      reader.onload = async () => {
-        this.photoData = reader.result; // "data:image/jpeg;base64,...."
-        // 2. Immediately ask backend to classify
-        this.isLoading = true;
-        this.guess = null;
+  this.isLoading = true;
+  this.guess = null;
 
-        console.log("[AddPlant] photoData starts with:", this.photoData?.slice(0, 50));
+  try {
+    // shrink first
+    const resizedDataUrl = await this.resizeImageFile(file, 1024, 0.8);
 
-        try {
-          const res = await fetch("/api/classifyPlant", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              imageDataUrl: this.photoData,
-            }),
-          });
+    // show preview in UI
+    this.photoData = resizedDataUrl;
 
-          console.log("[AddPlant] status from /api/classifyPlant:", res.status);
+    console.log("[AddPlant] resizedDataUrl starts with:", resizedDataUrl.slice(0, 50));
 
-          const json = await res.json();
-          console.log("[AddPlant] response json:", json);
+    const res = await fetch("/api/classifyPlant", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        imageDataUrl: resizedDataUrl,
+      }),
+    });
 
-          this.guess = json.species || "unknown";
-        } catch (err) {
-          console.error("classification failed", err);
-          this.guess = "unknown";
-        } finally {
-          this.isLoading = false;
-        }
-      };
-      reader.readAsDataURL(file);
-    },
+    console.log("[AddPlant] status from /api/classifyPlant:", res.status);
+
+    // if it's not 200, grab text so we can see the error HTML / message
+    if (!res.ok) {
+      const txt = await res.text();
+      console.error("[AddPlant] non-200 body:", txt);
+      this.guess = "unknown";
+      return;
+    }
+
+    const json = await res.json();
+    console.log("[AddPlant] response json:", json);
+
+    this.guess = json.species || "unknown";
+  } catch (err) {
+    console.error("classification failed", err);
+    this.photoData = null;
+    this.guess = "unknown";
+  } finally {
+    this.isLoading = false;
+  }
+},
+
 
     retake() {
       this.photoData = null;
