@@ -148,6 +148,8 @@ export default {
         this.isLoading = true;
         this.guess = null;
 
+        console.log("[AddPlant] photoData starts with:", this.photoData?.slice(0, 50));
+
         try {
           const res = await fetch("/api/classifyPlant", {
             method: "POST",
@@ -157,7 +159,11 @@ export default {
             }),
           });
 
+          console.log("[AddPlant] status from /api/classifyPlant:", res.status);
+
           const json = await res.json();
+          console.log("[AddPlant] response json:", json);
+
           this.guess = json.species || "unknown";
         } catch (err) {
           console.error("classification failed", err);
