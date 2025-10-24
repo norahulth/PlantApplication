@@ -4,7 +4,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// helper: super strict JSON extraction fallback
+// helper: grab "species" from model output
 function extractSpecies(text) {
   try {
     const parsed = JSON.parse(text);
@@ -12,36 +12,67 @@ function extractSpecies(text) {
       return parsed.species;
     }
   } catch (e) {
-    // model maybe returned plain text like "This looks like a pothos."
-    // fallback regex for last resort:
-    const match = text.match(/(pothos|monstera|ficus|orchid|palm|succulent|snake plant|aloe|unknown)/i);
+    // not valid pure JSON, try loose match
+    const jsonLikeMatch = text.match(/"species"\s*:\s*"([^"]+)"/i);
+    if (jsonLikeMatch) {
+      return jsonLikeMatch[1];
+    }
+
+    const match = text.match(
+      /(pothos|monstera|ficus|orchid|palm|succulent|snake plant|aloe|unknown)/i
+    );
     if (match) return match[0];
   }
   return "unknown";
 }
 
 export default async function handler(req, res) {
+  // --- basic request validation ---
   if (req.method !== "POST") {
+    console.log("[classifyPlant] wrong method:", req.method);
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { imageDataUrl } = req.body || {};
+  // NOTE: depending on Vercel runtime, req.body may already be parsed JSON,
+  // but in some setups it's still a string. Let's guard both cases:
+  let body = req.body;
+  if (typeof body === "string") {
+    try {
+      body = JSON.parse(body);
+    } catch (e) {
+      console.error("[classifyPlant] could not parse req.body string as JSON:", e);
+    }
+  }
+
+  const { imageDataUrl } = body || {};
+  console.log(
+    "[classifyPlant] received imageDataUrl?",
+    imageDataUrl ? "yes" : "no"
+  );
+  if (imageDataUrl) {
+    console.log(
+      "[classifyPlant] imageDataUrl prefix:",
+      imageDataUrl.slice(0, 60)
+    );
+    console.log(
+      "[classifyPlant] approx length (chars):",
+      imageDataUrl.length
+    );
+  }
+
   if (!imageDataUrl) {
+    console.error("[classifyPlant] No image provided");
     return res.status(400).json({ error: "No image provided" });
   }
 
   try {
-    // Ask the model for a *short* structured answer.
-    // We tell it to ONLY return JSON like:
-    // { "species": "Monstera deliciosa" }
-    //
-    // We also tell it to answer "unknown" if it's not confident.
-    //
-    // Vision models like gpt-4o accept messages that include both text and an image,
-    // where the image can be sent as a base64 data URL string in `image_url.url`. :contentReference[oaicite:1]{index=1}
+    // --- Call OpenAI ---
+    console.log("[classifyPlant] Calling OpenAI...");
+
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o", // or "gpt-4o-mini" if you want cheaper/faster
+      model: "gpt-4o",
       temperature: 0.2,
+      max_tokens: 100,
       messages: [
         {
           role: "system",
@@ -51,7 +82,7 @@ export default async function handler(req, res) {
               text:
                 "You are a houseplant identification assistant. " +
                 "Identify the most likely common houseplant species in the photo. " +
-                'Return ONLY valid JSON like {"species": "Monstera deliciosa"}.' +
+                'Return ONLY valid JSON like {"species": "Monstera deliciosa"}. ' +
                 'If you are not at least 60% sure, respond with {"species": "unknown"}. ' +
                 "Use short common names or well known Latin names, not care tips.",
             },
@@ -67,27 +98,42 @@ export default async function handler(req, res) {
             {
               type: "image_url",
               image_url: {
-                // send the base64 data URL from the client
+                // we are passing the data URL directly
                 url: imageDataUrl,
               },
             },
           ],
         },
       ],
-      max_tokens: 100,
     });
 
-    const rawText = completion.choices?.[0]?.message?.content?.trim() || "";
-    const speciesGuess = extractSpecies(rawText);
+    // --- Process OpenAI response ---
+    const rawText = completion?.choices?.[0]?.message?.content?.trim() || "";
+    console.log("[classifyPlant] OpenAI rawText:", rawText);
 
+    const speciesGuess = extractSpecies(rawText);
+    console.log("[classifyPlant] Parsed speciesGuess:", speciesGuess);
+
+    // --- return ok ---
     return res.status(200).json({
       species: speciesGuess || "unknown",
-      raw: rawText, // optional: useful for debugging in dev
+      raw: rawText,
     });
   } catch (err) {
-    console.error("classification error", err);
+    // This is critical: log full error so we can diagnose
+    console.error("[classifyPlant] ERROR calling OpenAI:");
+    console.error("name:", err.name);
+    console.error("message:", err.message);
+    console.error("status:", err.status || err.statusCode);
+    // The SDK sometimes sticks response info on err.response
+    if (err.response) {
+      console.error("response status:", err.response.status);
+      console.error("response data:", err.response.data);
+    }
+    // We also want to send some debug info back to the client
     return res.status(500).json({
       error: "Classification failed",
+      details: err.message || "unknown server error",
       species: "unknown",
     });
   }
