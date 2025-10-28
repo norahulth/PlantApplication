@@ -16,8 +16,8 @@ export default defineConfig({
       devOptions: { enabled: true }, // enables SW in `vite dev`
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
-        name: 'Plant Application',
-        short_name: 'PlantApp',
+        name: 'Rootine',
+        short_name: 'Rootine',
         description: 'App for taking care of plants',
         theme_color: '#4CAF50',
         background_color: '#ffffff',
