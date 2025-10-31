@@ -12,7 +12,7 @@
       <img
         ref="bg"
         class="pan-img"
-        src="/background.jpg"
+        src="/background.png"
         alt="Cozy room"
         draggable="false"
         @load="onBgLoad"
