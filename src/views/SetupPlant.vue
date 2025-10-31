@@ -50,7 +50,7 @@ const router = useRouter()
 // ----- Galleries (paths relative to /public) -----
 const GALLERY = {
   orchid:   ['/orchids/orchids-1.png','/orchids/orchids-2.png','/orchids/orchids-3.png','/orchids/orchids-4.png'],
-  monstera: ['/monstera/monstera-1.png','/monstera/monstera-2.png','/monstera/monstera-3.png','/monstera/monstera-4.png'],
+  monstera: ['/monstera/monstera-1.png','/monstera/monstera-2.png','/monstera/monstera-3.png','/monstera/monstera-4.png,', '/monstera/monstera-5.png', '/monstera/monstera-6.png', '/monstera/monstera-7.png'],
   ficus:    ['/ficus/ficus-1.png','/ficus/ficus-2.png','/ficus/ficus-3.png','/ficus/ficus-4.png'],
   pothos:   ['/pothos/pothos-1.png','/pothos/pothos-2.png','/pothos/pothos-3.png','/pothos/pothos-4.webp'],
   unknown:  ['/unknown/unknown-1.png','/unknown/unknown-2.png', '/unknown/unknown-3.png', '/unknown/unknown-4.png']
