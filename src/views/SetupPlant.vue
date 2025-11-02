@@ -54,7 +54,7 @@ const GALLERY = {
   parlorpalm:  ['/parlor_arm/parlor-palm-1.png','/parlor_arm/parlor-palm-2.png','/parlor_arm/parlor-palm-3.png','/parlor_arm/parlor-palm-4.png','/parlor_arm/parlor-palm-5.png','/parlor_arm/parlor-palm-6.png'],
   peacelily:   ['/peace_lily/peace-lily-1.png','/peace_lily/peace-lily-2.png','/peace_lily/peace-lily-3.png','/peace_lily/peace-lily-4.png'],
   rubberfig:   ['/rubber_fig/rubber-fig-1.png','/rubber_fig/rubber-fig-2.png','/rubber_fig/rubber-fig-3.png','/rubber_fig/rubber-fig-4.png'],
-  orchid:      ['/orchids/orchid-1.png','/orchids/orchid-2.png','/orchids/orchid-3.png'],
+  orchid:      ['/orchid/orchid-1.png','/orchid/orchid-2.png','/orchid/orchid-3.png'],
   unknown:     ['/unknown/unknown-1.png','/unknown/unknown-2.png', '/unknown/unknown-3.png', '/unknown/unknown-4.png']
 }
 
