@@ -8,6 +8,7 @@
       @pointerup="onPointerUp"
       @pointercancel="onPointerUp"
       @pointerleave="onPointerUp"
+      @click="closeActions"
     >
       <img
         ref="bg"
@@ -44,6 +45,7 @@
         <!-- Action menu -->
         <div v-if="actionId === p.id" class="action-menu" @click.stop>
           <button class="action-btn" @click="waterPlant(p.id)" title="Water">💧</button>
+          <button class="action-btn info" @click="showInfo(p.id)" title="Info">ℹ️</button>
           <button class="action-btn danger" @click="deletePlant(p.id)" title="Delete">✖️</button>
         </div>
 
@@ -75,6 +77,47 @@
       </div>
 
     </div>
+
+    <!-- Info Popup -->
+    <div v-if="infoPlantId" class="info-overlay" @click="closeInfo">
+      <div class="info-popup" @click.stop>
+        <button class="info-close" @click="closeInfo">✕</button>
+        <div v-if="infoPlant" class="info-content">
+          <h3>{{ infoPlant.name }}</h3>
+          <p class="info-species">{{ infoPlant.species }}</p>
+          <div class="info-details">
+            <div class="info-item">
+              <span class="info-icon">💧</span>
+              <div>
+                <strong>Watering:</strong>
+                <p>{{ infoPlant.water || 'No information available' }}</p>
+              </div>
+            </div>
+            <div class="info-item">
+              <span class="info-icon">☀️</span>
+              <div>
+                <strong>Sunlight:</strong>
+                <p>{{ infoPlant.sun || 'No information available' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Popup -->
+    <div v-if="deleteConfirmId" class="info-overlay" @click="cancelDelete">
+      <div class="confirm-popup" @click.stop>
+        <div v-if="deleteConfirmPlant" class="confirm-content">
+          <div class="confirm-icon">😢</div>
+          <h3>Are you sure you want to delete {{ deleteConfirmPlant.name }}?</h3>
+          <div class="confirm-actions">
+            <button class="confirm-btn delete-btn" @click="confirmDelete">Delete</button>
+            <button class="confirm-btn cancel-btn" @click="cancelDelete">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -105,11 +148,21 @@ export default {
       wateringPlantId: null, // plant being watered (for animation)
       wateringFrame: 0,      // animation frame (0=empty, 1=full, 2=empty)
       isTouchDevice: false,  // detect if touch device
+      infoPlantId: null,     // plant id for info popup
+      deleteConfirmId: null, // plant id for delete confirmation
     }
   },
   computed: {
     ...mapGetters(['allPlants']),
-    plants() { return this.allPlants }
+    plants() { return this.allPlants },
+    infoPlant() {
+      if (!this.infoPlantId) return null
+      return this.plants.find(p => p.id === this.infoPlantId)
+    },
+    deleteConfirmPlant() {
+      if (!this.deleteConfirmId) return null
+      return this.plants.find(p => p.id === this.deleteConfirmId)
+    }
   },
   mounted() {
     // Detect if this is a touch device
@@ -164,12 +217,28 @@ export default {
       this.draggingId = null
       this.bubbleExpanded = false // Close bubble when clicking elsewhere
     },
+    showInfo(id) {
+      this.infoPlantId = id
+      this.closeActions()
+    },
+    closeInfo() {
+      this.infoPlantId = null
+    },
     toggleBubble() {
       this.bubbleExpanded = !this.bubbleExpanded
     },
-    async deletePlant(id) { 
-      await this.$store.dispatch('removePlant', id)
+    deletePlant(id) { 
+      this.deleteConfirmId = id
       this.closeActions()
+    },
+    async confirmDelete() {
+      if (this.deleteConfirmId) {
+        await this.$store.dispatch('removePlant', this.deleteConfirmId)
+        this.deleteConfirmId = null
+      }
+    },
+    cancelDelete() {
+      this.deleteConfirmId = null
     },
 
     onRoomPointerDown(/* e */) {
@@ -422,6 +491,8 @@ export default {
   background: #eef6ee; transition: transform .1s ease, background .15s ease;
 }
 .action-btn:hover { transform: scale(1.06); background: #e6f2e6; }
+.action-btn.info { background: #e0f2fe; }
+.action-btn.info:hover { background: #bae6fd; }
 .action-btn.danger { background: #ffecec; }
 .action-btn.danger:hover { background: #ffdede; }
 
@@ -501,7 +572,6 @@ export default {
   position: absolute;
   top: 100%;
   left: 50%;
-  transform: translate(-50%, -2px);
   width: 10px;
   height: 10px;
   background: inherit;
@@ -648,6 +718,234 @@ export default {
   
   .bubble-text {
     font-size: 14px;
+  }
+}
+
+/* Info Popup */
+.info-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.info-popup {
+  position: relative;
+  background: white;
+  border-radius: 20px;
+  padding: 28px;
+  max-width: 450px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.info-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #f3f4f6;
+  border-radius: 50%;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4b5563;
+  transition: all 0.2s ease;
+}
+
+.info-close:hover {
+  background: #e5e7eb;
+  color: #1f2937;
+  transform: scale(1.1);
+}
+
+.info-content h3 {
+  margin: 0 0 4px 0;
+  font-size: 24px;
+  color: #1f2937;
+  font-weight: 700;
+}
+
+.info-species {
+  margin: 0 0 20px 0;
+  font-size: 16px;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.info-details {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.info-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.info-icon {
+  font-size: 28px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.info-item strong {
+  display: block;
+  color: #374151;
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.info-item p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .info-popup {
+    padding: 24px;
+    max-width: 90%;
+  }
+  
+  .info-content h3 {
+    font-size: 20px;
+  }
+  
+  .info-species {
+    font-size: 14px;
+  }
+  
+  .info-item {
+    padding: 12px;
+  }
+  
+  .info-icon {
+    font-size: 24px;
+  }
+}
+
+/* Delete Confirmation Popup */
+.confirm-popup {
+  position: relative;
+  background: white;
+  border-radius: 20px;
+  padding: 32px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.confirm-content {
+  text-align: center;
+}
+
+.confirm-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  animation: sadShake 0.5s ease-in-out;
+}
+
+.confirm-content h3 {
+  margin: 0 0 24px 0;
+  font-size: 20px;
+  color: #1f2937;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.confirm-btn {
+  padding: 12px 28px;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 110px;
+}
+
+.delete-btn {
+  background: #dc2626;
+  color: white;
+}
+
+.delete-btn:hover {
+  background: #b91c1c;
+  transform: scale(1.05);
+}
+
+.cancel-btn {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.cancel-btn:hover {
+  background: #e5e7eb;
+  transform: scale(1.05);
+}
+
+@keyframes sadShake {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  25% { transform: translateX(-8px) rotate(-5deg); }
+  75% { transform: translateX(8px) rotate(5deg); }
+}
+
+@media (max-width: 640px) {
+  .confirm-popup {
+    padding: 28px 20px;
+  }
+  
+  .confirm-icon {
+    font-size: 52px;
+  }
+  
+  .confirm-content h3 {
+    font-size: 18px;
+  }
+  
+  .confirm-actions {
+    flex-direction: column;
+  }
+  
+  .confirm-btn {
+    width: 100%;
   }
 }
 </style>

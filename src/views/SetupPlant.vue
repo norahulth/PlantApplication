@@ -150,8 +150,9 @@ async function save() {
     image: currentImage.value,
     x: Math.round(10 + Math.random() * 80),
     y: Math.round(10 + Math.random() * 70),
-    watered: false
-    // not saving care right now, per your request
+    watered: false,
+    water: care.value.water,
+    sun: care.value.sun
   }
   await store.dispatch('addPlant', plant)
   store.commit('clearTempPlant')
