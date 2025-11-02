@@ -381,8 +381,8 @@ export default {
 /* Thought Bubble over sofa */
 .thought-bubble {
   position: absolute;
-  bottom: 15%;
-  left: 50%;
+  top: 38%;
+  left: 38%;
   transform: translateX(-50%);
   cursor: pointer;
   z-index: 100;
@@ -442,22 +442,12 @@ export default {
   height: 8px;
   background: #69b36b;
   border-radius: 50%;
-  animation: bounce 1.4s ease-in-out infinite;
-}
-
-.bubble-dots span:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.bubble-dots span:nth-child(3) {
-  animation-delay: 0.4s;
 }
 
 /* Expanded bubble with text */
 .thought-bubble.expanded {
   width: 280px;
-  min-height: 100px;
-  padding: 20px;
+  padding: 16px 20px;
   background: white;
   border-radius: 20px;
   box-shadow: 0 12px 40px rgba(0,0,0,0.2);
@@ -501,11 +491,6 @@ export default {
   50% { transform: translateX(-50%) translateY(-8px); }
 }
 
-@keyframes bounce {
-  0%, 60%, 100% { transform: translateY(0); }
-  30% { transform: translateY(-8px); }
-}
-
 @keyframes fadeIn {
   from { opacity: 0; transform: scale(0.9); }
   to { opacity: 1; transform: scale(1); }
@@ -519,7 +504,7 @@ export default {
   
   .thought-bubble.expanded {
     width: 240px;
-    padding: 16px;
+    padding: 14px 16px;
   }
   
   .bubble-text {
