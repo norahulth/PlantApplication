@@ -57,6 +57,11 @@ function categorizeSpecies(species) {
     return "Rubber Fig";
   }
   
+  // Check for Orchid (Phalaenopsis, etc.)
+  if (lower.includes("orchid") || lower.includes("phalaenopsis")) {
+    return "Orchid";
+  }
+  
   // If not matched, return unknown
   return "unknown";
 }
@@ -121,7 +126,8 @@ export default async function handler(req, res) {
                 "- Pothos (also known as Devil's Ivy or Epipremnum aureum)\n" +
                 "- Parlor Palm (Chamaedorea elegans or similar small palms)\n" +
                 "- Peace Lily (Spathiphyllum)\n" +
-                "- Rubber Plant/Fig (Ficus elastica)\n\n" +
+                "- Rubber Plant/Fig (Ficus elastica)\n" +
+                "- Orchid (Phalaenopsis or any orchid species)\n\n" +
                 'Return ONLY valid JSON like {"species": "Monstera"} or {"species": "Pothos"}. ' +
                 'If the plant does NOT match any of these categories or you are not at least 60% sure, ' +
                 'respond with {"species": "unknown"}. ' +

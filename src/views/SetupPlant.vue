@@ -50,10 +50,11 @@ const router = useRouter()
 // ----- Galleries (paths relative to /public) -----
 const GALLERY = {
   monstera:    ['/monstera/monstera-1.png','/monstera/monstera-2.png','/monstera/monstera-3.png','/monstera/monstera-4.png', '/monstera/monstera-5.png', '/monstera/monstera-6.png', '/monstera/monstera-7.png'],
-  pothos:      ['/pothos/pothos-1.png','/pothos/pothos-2.png','/pothos/pothos-3.png','/pothos/pothos-4.webp'],
+  pothos:      ['/pothos/pothos-1.png','/pothos/pothos-2.png','/pothos/pothos-3.png','/pothos/pothos-4.png','/pothos/pothos-5.png'],
   parlorpalm:  ['/parlor_arm/parlor-palm-1.png','/parlor_arm/parlor-palm-2.png','/parlor_arm/parlor-palm-3.png','/parlor_arm/parlor-palm-4.png','/parlor_arm/parlor-palm-5.png','/parlor_arm/parlor-palm-6.png'],
   peacelily:   ['/peace_lily/peace-lily-1.png','/peace_lily/peace-lily-2.png','/peace_lily/peace-lily-3.png','/peace_lily/peace-lily-4.png'],
   rubberfig:   ['/rubber_fig/rubber-fig-1.png','/rubber_fig/rubber-fig-2.png','/rubber_fig/rubber-fig-3.png','/rubber_fig/rubber-fig-4.png'],
+  orchid:      ['/orchids/orchid-1.png','/orchids/orchid-2.png','/orchids/orchid-3.png'],
   unknown:     ['/unknown/unknown-1.png','/unknown/unknown-2.png', '/unknown/unknown-3.png', '/unknown/unknown-4.png']
 }
 
@@ -84,6 +85,7 @@ function toKey(species) {
   if (s.includes('parlor') || s.includes('palm')) return 'parlorpalm'
   if (s.includes('peace') || s.includes('lily')) return 'peacelily'
   if (s.includes('rubber') || s.includes('fig')) return 'rubberfig'
+  if (s.includes('orchid') || s.includes('phalaenopsis')) return 'orchid'
   return 'unknown'
 }
 
