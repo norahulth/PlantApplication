@@ -30,6 +30,9 @@ export async function subscribeToPush() {
   const perm = await Notification.requestPermission()
   if (perm !== 'granted') return
 
+  // Get current userId from localStorage
+  const userId = localStorage.getItem('userId')
+
   const reg = await navigator.serviceWorker.ready
   const sub = await reg.pushManager.subscribe({
     userVisibleOnly: true,
@@ -39,6 +42,6 @@ export async function subscribeToPush() {
   await fetch('/api/subscribe', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(sub)
+    body: JSON.stringify({ subscription: sub, userId }) // Send userId with subscription
   })
 }

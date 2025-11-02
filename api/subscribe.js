@@ -7,9 +7,16 @@ const redis = new Redis({
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end()
-  const sub = req.body
-  if (!sub?.endpoint) return res.status(400).json({ error: 'Bad subscription' })
+  
+  const { subscription, userId } = req.body
+  if (!subscription?.endpoint) return res.status(400).json({ error: 'Bad subscription' })
+  if (!userId) return res.status(400).json({ error: 'Missing userId' })
 
-  await redis.sadd('push:subs', JSON.stringify(sub))
+  // Store subscription with userId
+  await redis.sadd('push:subs', JSON.stringify({ ...subscription, userId }))
+  
+  // Also create a reverse mapping: endpoint -> userId for quick lookup
+  await redis.set(`sub:${subscription.endpoint}`, userId)
+  
   return res.status(201).json({ ok: true })
 }
