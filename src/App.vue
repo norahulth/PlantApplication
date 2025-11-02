@@ -204,6 +204,7 @@ body,
   height: 100%;
   margin: 0;
   font-family: Garamond, serif;
+  background: #92B780;
 }
 
 /* Container for floating buttons */

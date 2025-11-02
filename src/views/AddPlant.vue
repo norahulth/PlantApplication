@@ -16,7 +16,6 @@
         <path d="M15 19l-7-7 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </button>
-    <h2>Add a photo</h2>
   </div>
 
   <!-- Before photo is picked -->
@@ -67,7 +66,6 @@
             <path d="M15 19l-7-7 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </button>
-        <h2>Add manually</h2>
       </div>
 
       <form @submit.prevent="saveManual" class="manual-form">
@@ -258,13 +256,22 @@ export default {
 </script>
 
 <style scoped>
-/* (same styles you had) */
-.add-plant-page { min-height: 100vh; padding: 16px; box-sizing: border-box; color: #1f2937; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.title { margin: 0 0 24px; font-size: 1.8rem; font-weight: 700; text-align: center; }
+/* Green background with gradient */
+.add-plant-page { 
+  min-height: 100vh; 
+  padding: 16px; 
+  box-sizing: border-box; 
+  color: #1f2937; 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  justify-content: center;
+}
+.title { margin: 0 0 24px; font-size: 1.8rem; font-weight: 700; text-align: center; color: #064e3b; }
 .mode-picker { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 320px; align-items: stretch; }
 .camera-section, .manual-section { width: 100%; max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
 .section-header { position: relative; width: 100%; max-width: 720px; display: flex; justify-content: center; align-items: center; margin: 12px 0 20px; padding-top: 56px; }
-.section-header h2 { margin: 0; font-size: 1.2rem; text-align: center; }
+.section-header h2 { margin: 0; font-size: 1.2rem; text-align: center; color: #064e3b; }
 .choice-buttons { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; align-items: stretch; justify-content: center; }
 .upload-wrap { display: grid; gap: 10px; justify-items: center; }
 .photo-wrap { display: grid; gap: 12px; justify-items: center; }
@@ -278,22 +285,81 @@ export default {
   display: block;
 }
 .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-.btn { border: none; padding: 12px 16px; border-radius: 12px; background: #4caf50; color: #fff; font-weight: 600; cursor: pointer; }
+/* Light grey button colors */
+.btn { 
+  border: none; 
+  padding: 12px 16px; 
+  border-radius: 12px; 
+  background: #d1d5db; 
+  color: #1f2937; 
+  font-weight: 600; 
+  cursor: pointer; 
+  transition: transform 0.1s ease, background 0.15s ease;
+}
+.btn:hover:not(:disabled) {
+  background: #9ca3af;
+  transform: translateY(-1px);
+}
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 .btn.big { font-size: 1rem; }
-.btn-secondary { background: #3b82f6; }
-.btn-accent { background: #22c55e; }
+.btn-secondary { 
+  background: #d1d5db; 
+}
+.btn-secondary:hover:not(:disabled) {
+  background: #9ca3af;
+}
+.btn-accent { 
+  background: #d1d5db; 
+}
+.btn-accent:hover:not(:disabled) {
+  background: #9ca3af;
+}
 .manual-form { width: 100%; max-width: 420px; display: grid; gap: 12px; justify-items: center; text-align: center; }
-.manual-form label { width: 100%; font-weight: 600; }
-.manual-form input { width: 100%; max-width: 420px; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 10px; font-size: 1rem; }
-.back-circle { position: absolute; top: 8px; left: 8px; width: 40px; height: 40px; border-radius: 999px; border: none; background: #9ca3af; color: #fff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.12); transition: transform .08s ease, background .15s ease; }
-.back-circle:hover { background: #6b7280; } .back-circle:active { transform: scale(.96); }
+.manual-form label { width: 100%; font-weight: 600; color: #064e3b; }
+.manual-form input { 
+  width: 100%; 
+  max-width: 420px; 
+  padding: 10px 12px; 
+  border: 2px solid #10b981; 
+  border-radius: 10px; 
+  font-size: 1rem; 
+  background: #fff;
+}
+.manual-form input:focus {
+  outline: none;
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+.back-circle { 
+  position: absolute; 
+  top: 8px; 
+  left: 8px; 
+  width: 40px; 
+  height: 40px; 
+  border-radius: 999px; 
+  border: none; 
+  background: rgba(255, 255, 255, 0.9); 
+  color: #064e3b; 
+  display: inline-flex; 
+  align-items: center; 
+  justify-content: center; 
+  cursor: pointer; 
+  box-shadow: 0 2px 8px rgba(0,0,0,.15); 
+  transition: transform .08s ease, background .15s ease; 
+}
+.back-circle:hover { background: #fff; } 
+.back-circle:active { transform: scale(.96); }
 .ai-result {
   font-size: 0.95rem;
-  background: #f3f4f6;
+  background: rgba(255, 255, 255, 0.95);
   padding: 10px 14px;
   border-radius: 8px;
   text-align: center;
   max-width: 320px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.1);
 }
 .ai-result p {
   margin: 0;
@@ -302,7 +368,7 @@ export default {
 }
 .ai-result strong {
   font-weight: 700;
-  color: #111827;
+  color: #064e3b;
 }
 
 </style>

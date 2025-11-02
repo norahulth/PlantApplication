@@ -161,7 +161,14 @@ async function save() {
 </script>
 
 <style scoped>
-.wrap { display: grid; gap: 24px; padding: 16px; max-width: 980px; margin: 0 auto; }
+.wrap { 
+  display: grid; 
+  gap: 24px; 
+  padding: 16px; 
+  max-width: 980px; 
+  margin: 0 auto; 
+  min-height: 100vh;
+}
 .card { background:#fff; border-radius:16px; padding:20px; box-shadow:0 10px 30px rgba(0,0,0,.08); }
 .sub { color:#6aa56b; margin:.25rem 0 1rem; }
 .info { display:grid; gap:8px; margin-bottom: 12px; }
