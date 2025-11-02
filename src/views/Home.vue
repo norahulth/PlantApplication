@@ -410,44 +410,44 @@ export default {
 /* Watering animation */
 .watering-animation {
   position: absolute;
-  bottom: 100%;
+  top: 50%;
   left: 50%;
-  transform: translate(-50%, -20px);
+  transform: translate(-50%, -50%);
   pointer-events: none;
   z-index: 200;
   animation: wateringDrop 1s ease-out;
 }
 
 .watering-can {
-  width: 80px;
+  width: 180px;
   height: auto;
   display: block;
-  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.3));
   animation: wateringTilt 0.8s ease-in-out;
 }
 
 @keyframes wateringDrop {
   0% { 
     opacity: 0; 
-    transform: translate(-50%, -60px) scale(0.5);
+    transform: translate(-50%, -50%) scale(0.5);
   }
   20% {
     opacity: 1;
-    transform: translate(-50%, -30px) scale(1);
+    transform: translate(-50%, -50%) scale(1.1);
   }
   80% {
     opacity: 1;
-    transform: translate(-50%, -20px) scale(1);
+    transform: translate(-50%, -50%) scale(1);
   }
   100% { 
     opacity: 0; 
-    transform: translate(-50%, -10px) scale(0.9);
+    transform: translate(-50%, -50%) scale(0.9);
   }
 }
 
 @keyframes wateringTilt {
   0%, 100% { transform: rotate(0deg); }
-  30%, 70% { transform: rotate(-15deg); }
+  30%, 70% { transform: rotate(-20deg); }
 }
 
 @media (max-width: 640px) {
@@ -456,7 +456,7 @@ export default {
   .label .species { font-size: 13px; }
   .action-btn { width: 36px; height: 36px; font-size: 18px; }
   
-  .watering-can { width: 60px; }
+  .watering-can { width: 120px; }
 }
 .callout {
   position: absolute;
