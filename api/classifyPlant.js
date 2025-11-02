@@ -23,7 +23,7 @@ function mapToPlantCategory(text) {
   return categorizeSpecies(text);
 }
 
-// Map any plant identification to our specific categories
+// Map any plant identification to our specific categories, or return the plant name if identifiable
 function categorizeSpecies(species) {
   if (!species) return "unknown";
   
@@ -62,7 +62,12 @@ function categorizeSpecies(species) {
     return "Orchid";
   }
   
-  // If not matched, return unknown
+  // If not in our specific categories but it's a valid plant name (not "unknown"), return it as-is
+  // Capitalize first letter for consistency
+  if (lower !== "unknown") {
+    return species.charAt(0).toUpperCase() + species.slice(1);
+  }
+  
   return "unknown";
 }
 
@@ -121,17 +126,17 @@ export default async function handler(req, res) {
               type: "text",
               text:
                 "You are a houseplant identification assistant. " +
-                "Identify if the plant in the photo is one of these types:\n" +
+                "First, check if the plant in the photo is one of these specific types:\n" +
                 "- Monstera (Monstera deliciosa)\n" +
                 "- Pothos (also known as Devil's Ivy or Epipremnum aureum)\n" +
                 "- Parlor Palm (Chamaedorea elegans or similar small palms)\n" +
                 "- Peace Lily (Spathiphyllum)\n" +
                 "- Rubber Plant/Fig (Ficus elastica)\n" +
                 "- Orchid (Phalaenopsis or any orchid species)\n\n" +
-                'Return ONLY valid JSON like {"species": "Monstera"} or {"species": "Pothos"}. ' +
-                'If the plant does NOT match any of these categories or you are not at least 60% sure, ' +
-                'respond with {"species": "unknown"}. ' +
-                "Use the exact names listed above.",
+                "If it matches one of these, return that name. " +
+                "If it doesn't match but you can identify it as another plant species (at least 60% confident), return that plant's common name. " +
+                'Only return "unknown" if you cannot identify the plant at all.\n\n' +
+                'Return ONLY valid JSON like {"species": "Monstera"} or {"species": "Snake Plant"} or {"species": "unknown"}.',
             },
           ],
         },
