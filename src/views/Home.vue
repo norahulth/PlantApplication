@@ -53,6 +53,7 @@
             :src="wateringFrame === 1 ? '/watering-can-full.png' : '/watering-can-empty.png'"
             alt="Watering can"
             class="watering-can"
+            :class="{ tilted: wateringFrame !== 1 }"
           />
         </div>
       </div>
@@ -442,7 +443,12 @@ export default {
   height: auto;
   display: block;
   filter: drop-shadow(0 8px 16px rgba(0,0,0,0.3));
-  animation: wateringTilt 0.8s ease-in-out;
+  transform: rotate(0deg);
+  transition: transform 0.2s ease;
+}
+
+.watering-can.tilted {
+  transform: rotate(-20deg);
 }
 
 @keyframes wateringDrop {
@@ -464,10 +470,6 @@ export default {
   }
 }
 
-@keyframes wateringTilt {
-  0%, 100% { transform: rotate(0deg); }
-  30%, 70% { transform: rotate(-20deg); }
-}
 
 @media (max-width: 640px) {
   .pot { width: 90px; }
