@@ -410,9 +410,9 @@ export default {
 /* Watering animation */
 .watering-animation {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  top: 0;
+  left: -100px;
+  transform: translateY(0);
   pointer-events: none;
   z-index: 200;
   animation: wateringDrop 1s ease-out;
@@ -429,19 +429,19 @@ export default {
 @keyframes wateringDrop {
   0% { 
     opacity: 0; 
-    transform: translate(-50%, -50%) scale(0.5);
+    transform: translateY(0) scale(0.5);
   }
   20% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1.1);
+    transform: translateY(0) scale(1.1);
   }
   80% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: translateY(0) scale(1);
   }
   100% { 
     opacity: 0; 
-    transform: translate(-50%, -50%) scale(0.9);
+    transform: translateY(0) scale(0.9);
   }
 }
 
