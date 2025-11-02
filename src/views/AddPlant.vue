@@ -270,7 +270,7 @@ export default {
 .photo-wrap { display: grid; gap: 12px; justify-items: center; }
 .photo-wrap img { 
   max-width: min(100%, 480px); 
-  max-height: 50vh; 
+  max-height: 30vh; 
   width: auto; 
   height: auto; 
   object-fit: contain; 
