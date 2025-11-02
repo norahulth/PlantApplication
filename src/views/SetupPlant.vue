@@ -138,7 +138,7 @@ function cancel() {
   store.commit?.('clearTempPlant')
   router.push('/')
 }
-function save() {
+async function save() {
   const plant = {
     id: Date.now().toString(),
     species: draft.species,

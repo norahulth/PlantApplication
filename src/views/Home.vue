@@ -83,7 +83,7 @@ export default {
     this.roomHeight = window.innerHeight
     this.$nextTick(() => {
       this.updateRoomSize()
-      this.$store.commit('setAllUnwatered')
+      this.$store.dispatch('setAllUnwatered')
     })
     window.addEventListener('resize', this.updateRoomSize, { passive: true })
   },
@@ -103,15 +103,18 @@ export default {
       // pull any edge plants back inside the safe area
       this.$nextTick(() => this.clampAllPlantsToSafeArea())
     },
-    waterPlant(id) {
-      this.$store.commit('waterPlant', id)
+    async waterPlant(id) {
+      await this.$store.dispatch('waterPlant', id)
       this.closeActions()
     },
 
     // Actions
     openActions(id) { if (!this.isDragging) this.actionId = id },
     closeActions() { this.actionId = null; this.draggingId = null },
-    deletePlant(id) { this.$store.commit('removePlant', id); this.closeActions() },
+    async deletePlant(id) { 
+      await this.$store.dispatch('removePlant', id)
+      this.closeActions()
+    },
 
     onRoomPointerDown(e) {
   // Tap-to-place: if user already picked "Move" (draggingId set) and taps the room (not a plant),
@@ -204,7 +207,7 @@ export default {
     const xPct = Math.round((clampedX / rect.width) * 100)
     const yPct = Math.round((clampedY / rect.height) * 100)
 
-    this.$store.commit('updatePlantPosition', { id: this.draggingId, x: xPct, y: yPct })
+    this.$store.dispatch('updatePlantPosition', { id: this.draggingId, x: xPct, y: yPct })
   },
 
   clampAllPlantsToSafeArea() {
@@ -230,7 +233,7 @@ export default {
       const yPct = Math.round((clampedY / rect.height) * 100)
 
       if (xPct !== p.x || yPct !== p.y) {
-        this.$store.commit('updatePlantPosition', { id: p.id, x: xPct, y: yPct })
+        this.$store.dispatch('updatePlantPosition', { id: p.id, x: xPct, y: yPct })
       }
     })
   },
