@@ -149,7 +149,7 @@ function save() {
     watered: false
     // not saving care right now, per your request
   }
-  store.commit('addPlant', plant)
+  await store.dispatch('addPlant', plant)
   store.commit('clearTempPlant')
   router.push('/')
 }

@@ -12,6 +12,8 @@ registerSW({
 
 createApp(App).use(store).use(router).mount("#app");
 
+store.dispatch('loadPlants');
+
 // helper to convert the VAPID public key
 function urlB64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4)
