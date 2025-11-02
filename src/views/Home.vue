@@ -88,6 +88,8 @@ export default {
       isDragCandidate: false,
       dragStart: { x: 0, y: 0 },   // pointerdown start (px within room)
       bubbleExpanded: false, // thought bubble state
+      longPressTimer: null, // timer for long-press detection
+      isLongPress: false,   // whether long press was triggered
     }
   },
   computed: {
@@ -148,46 +150,91 @@ export default {
     },
 
     beginDrag(id, e) {
-      // Start a potential drag for this plant
+      // Clear any existing timer
+      if (this.longPressTimer) {
+        clearTimeout(this.longPressTimer)
+      }
+      
+      // Store the plant we're potentially dragging
       this.draggingId = id
+      this.isLongPress = false
+      this.isDragging = false
+      this.isDragCandidate = false
+      
       const room = this.$el.querySelector('.room')
       if (!room) return
       const rect = room.getBoundingClientRect()
-      this.isDragCandidate = true
-      this.isDragging = false
       this.dragStart.x = e.clientX - rect.left
       this.dragStart.y = e.clientY - rect.top
+      
+      // Set up long-press detection (500ms)
+      this.longPressTimer = setTimeout(() => {
+        this.isLongPress = true
+        this.isDragCandidate = true
+        // Provide haptic feedback on mobile
+        if (navigator.vibrate) {
+          navigator.vibrate(50)
+        }
+      }, 500)
+      
       e.currentTarget.setPointerCapture?.(e.pointerId)
     },
 
   onPointerMove(e) {
     if (!this.draggingId) return
+    
+    // If long press hasn't been triggered yet, cancel it if user moves too much
+    if (!this.isLongPress && this.longPressTimer) {
+      const room = this.$el.querySelector('.room')
+      if (!room) return
+      const rect = room.getBoundingClientRect()
+      const cx = e.clientX - rect.left
+      const cy = e.clientY - rect.top
+      const dx = cx - this.dragStart.x
+      const dy = cy - this.dragStart.y
+      
+      // If moved beyond threshold before long press, cancel the long press
+      if (Math.hypot(dx, dy) >= DRAG_THRESHOLD) {
+        clearTimeout(this.longPressTimer)
+        this.longPressTimer = null
+        return
+      }
+    }
+    
+    // Only allow dragging if long press was triggered
+    if (!this.isLongPress) return
+    
     const room = this.$el.querySelector('.room')
     if (!room) return
-
     const rect = room.getBoundingClientRect()
     const cx = e.clientX - rect.left
     const cy = e.clientY - rect.top
 
-    // If we’re only a candidate, check threshold before starting real drag
+    // Start dragging on first movement after long press
     if (this.isDragCandidate && !this.isDragging) {
       const dx = cx - this.dragStart.x
       const dy = cy - this.dragStart.y
       if (Math.hypot(dx, dy) >= DRAG_THRESHOLD) {
         this.isDragging = true
-        this.$el.classList.add('dragging')   // locks scroll via CSS
+        this.$el.classList.add('dragging')
       } else {
         return
       }
     }
 
     if (this.isDragging) {
-      e.preventDefault() // stop the page from panning while dragging
+      e.preventDefault()
       this.updatePositionFromCoords(cx, cy, rect)
     }
   },
 
   onPointerUp() {
+    // Clear long press timer if still running
+    if (this.longPressTimer) {
+      clearTimeout(this.longPressTimer)
+      this.longPressTimer = null
+    }
+    
     if (!this.draggingId) return
     
     const plantId = this.draggingId
@@ -197,12 +244,14 @@ export default {
       // User dragged the plant - position already saved
       this.isDragging = false
       this.$el.classList.remove('dragging')
-    } else {
-      // It was a tap (no drag) - open the action menu
+    } else if (!this.isLongPress) {
+      // It was a quick tap (no long press, no drag) - open the action menu
       this.openActions(plantId)
     }
+    // If it was a long press but no drag, do nothing
     
     this.draggingId = null
+    this.isLongPress = false
   },
 
   updatePositionFromEvent(e) {
@@ -283,13 +332,19 @@ export default {
   position: absolute;
   transform: translate(-50%, -100%);
   text-decoration: none;
-  cursor: grab;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none; /* Prevent iOS context menu */
+  touch-action: none; /* Prevent default touch behaviors */
 }
-.plant:active { cursor: grabbing; }
 
 .pot {
   width: 140px; height: auto;
-  user-select: none; -webkit-user-drag: none;
+  user-select: none; 
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none; /* Prevent iOS callout */
+  pointer-events: none; /* Let parent handle all interactions */
   filter: drop-shadow(0 8px 12px rgba(0,0,0,0.3));
   display: block; transition: transform 0.15s ease;
 }
