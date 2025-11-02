@@ -125,6 +125,16 @@ export default {
   },
   mounted() {
     this.maybeShowPushPrompt();
+    this.initAudio();
+  },
+  beforeUnmount() {
+    // Clean up audio when component unmounts
+    const audio = this.$refs.bgMusic;
+    if (audio) {
+      audio.pause();
+      audio.src = '';
+      audio.load();
+    }
   },
   methods: {
     redirect(target) {
@@ -175,18 +185,75 @@ export default {
       this.showPushPrompt = false;
     },
 
-    toggleMusic() {
+    initAudio() {
       const audio = this.$refs.bgMusic;
       if (!audio) return;
 
+      // Check if audio is already playing (from previous session)
+      console.log('Audio state on init:', {
+        paused: audio.paused,
+        ended: audio.ended,
+        readyState: audio.readyState,
+        currentTime: audio.currentTime
+      });
+
+      // If audio is somehow already playing, sync the state
+      if (!audio.paused) {
+        console.log('Audio is already playing, syncing state');
+        this.isPlaying = true;
+      } else {
+        // Make sure audio is truly stopped
+        audio.pause();
+        audio.currentTime = 0;
+        this.isPlaying = false;
+      }
+
+      // Listen for audio events to keep state in sync
+      audio.addEventListener('play', () => {
+        console.log('Audio play event');
+        this.isPlaying = true;
+      });
+
+      audio.addEventListener('pause', () => {
+        console.log('Audio pause event');
+        this.isPlaying = false;
+      });
+
+      audio.addEventListener('ended', () => {
+        console.log('Audio ended event');
+        this.isPlaying = false;
+      });
+    },
+
+    toggleMusic() {
+      const audio = this.$refs.bgMusic;
+      if (!audio) {
+        console.error('Audio element not found');
+        return;
+      }
+
+      console.log('Toggle music - current state:', {
+        isPlaying: this.isPlaying,
+        audioPaused: audio.paused,
+        readyState: audio.readyState
+      });
+
       if (this.isPlaying) {
+        console.log('Pausing audio');
         audio.pause();
         this.isPlaying = false;
       } else {
-        audio.play().catch(err => {
-          console.warn('Audio play failed:', err);
-        });
-        this.isPlaying = true;
+        console.log('Attempting to play audio');
+        audio.play()
+          .then(() => {
+            console.log('Audio play succeeded');
+            this.isPlaying = true;
+          })
+          .catch(err => {
+            console.error('Audio play failed:', err);
+            this.isPlaying = false;
+            alert('Could not play audio: ' + err.message);
+          });
       }
     },
   },
