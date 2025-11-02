@@ -53,7 +53,54 @@
           />
         </svg>
       </button>
+
+      <!-- Music button -->
+      <button
+        class="fab fab-music"
+        @click="toggleMusic"
+        :aria-label="isPlaying ? 'Mute music' : 'Play music'"
+        :title="isPlaying ? 'Mute music' : 'Play music'"
+      >
+        <!-- Music ON icon (muted speaker) -->
+        <svg
+          v-if="isPlaying"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46l1.41 1.41L18.36 8.46 19.77 9.87 18.36 11.28 19.77 12.69 18.36 14.1 16.95 12.69 15.54 14.1 14.13 12.69 15.54 11.28 14.13 9.87z"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linejoin="round"
+            fill="currentColor"
+          />
+        </svg>
+        <!-- Music OFF icon (music note) -->
+        <svg
+          v-else
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M9 18V5l12-2v13M9 18c0 1.66-1.34 3-3 3s-3-1.34-3-3 1.34-3 3-3 3 1.34 3 3zm12-2c0 1.66-1.34 3-3 3s-3-1.34-3-3 1.34-3 3-3 3 1.34 3 3z"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
     </div>
+
+    <!-- Audio element -->
+    <audio ref="bgMusic" loop>
+      <source src="/background-music.mp3" type="audio/mpeg">
+    </audio>
   </div>
 </template>
 
@@ -73,6 +120,7 @@ export default {
         typeof window !== "undefined" &&
         "serviceWorker" in navigator &&
         "PushManager" in window,
+      isPlaying: false,
     };
   },
   mounted() {
@@ -126,6 +174,21 @@ export default {
       localStorage.setItem(PUSH_PROMPT_KEY, "dismissed");
       this.showPushPrompt = false;
     },
+
+    toggleMusic() {
+      const audio = this.$refs.bgMusic;
+      if (!audio) return;
+
+      if (this.isPlaying) {
+        audio.pause();
+        this.isPlaying = false;
+      } else {
+        audio.play().catch(err => {
+          console.warn('Audio play failed:', err);
+        });
+        this.isPlaying = true;
+      }
+    },
   },
 };
 </script>
@@ -178,6 +241,11 @@ body,
 /* Home button color */
 .fab-home {
   background-color: #3b82f6; /* blue */
+}
+
+/* Music button color */
+.fab-music {
+  background-color: #8b5cf6; /* purple */
 }
 
 /* Hover effect */
@@ -240,12 +308,12 @@ body,
 }
 
 .btn-enable {
-  background: #4caf50;
+  background: #2e7d32;
   color: #fff;
 }
 .btn-enable:hover:not(:disabled) {
   transform: translateY(-1px);
-  background: #43a047;
+  background: #1b5e20;
 }
 .btn-enable:disabled {
   opacity: 0.6;
