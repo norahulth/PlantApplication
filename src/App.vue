@@ -98,14 +98,7 @@
     </div>
 
     <!-- Audio element -->
-    <audio 
-      ref="bgMusic" 
-      loop 
-      preload="metadata" 
-      playsinline
-      @pause="onAudioPause"
-      @play="onAudioPlay"
-    >
+    <audio ref="bgMusic" loop>
       <source src="/background-music.mp3" type="audio/mpeg">
     </audio>
   </div>
@@ -132,10 +125,6 @@ export default {
   },
   mounted() {
     this.maybeShowPushPrompt();
-    this.setupAudioListeners();
-  },
-  beforeUnmount() {
-    this.removeAudioListeners();
   },
   methods: {
     redirect(target) {
@@ -186,7 +175,7 @@ export default {
       this.showPushPrompt = false;
     },
 
-    async toggleMusic() {
+    toggleMusic() {
       const audio = this.$refs.bgMusic;
       if (!audio) return;
 
@@ -194,67 +183,11 @@ export default {
         audio.pause();
         this.isPlaying = false;
       } else {
-        try {
-          // Reset audio to beginning if it ended
-          if (audio.ended) {
-            audio.currentTime = 0;
-          }
-          
-          // Try to play
-          await audio.play();
-          this.isPlaying = true;
-        } catch (err) {
-          console.error('Audio play failed:', err);
-          // Don't set isPlaying to true if play failed
-          this.isPlaying = false;
-        }
+        audio.play().catch(err => {
+          console.warn('Audio play failed:', err);
+        });
+        this.isPlaying = true;
       }
-    },
-
-    setupAudioListeners() {
-      // Handle PWA visibility changes (when app comes back from background)
-      this.handleVisibilityChange = () => {
-        const audio = this.$refs.bgMusic;
-        if (!audio) return;
-
-        // When PWA becomes visible again and music should be playing
-        if (document.visibilityState === 'visible' && this.isPlaying) {
-          // Resume playback if it was paused by the browser
-          if (audio.paused) {
-            audio.play().catch(err => {
-              console.warn('Could not resume audio:', err);
-            });
-          }
-        }
-      };
-
-      // Handle page becoming visible/hidden
-      document.addEventListener('visibilitychange', this.handleVisibilityChange);
-
-      // Handle PWA resume (iOS specific)
-      window.addEventListener('pageshow', this.handleVisibilityChange);
-    },
-
-    removeAudioListeners() {
-      if (this.handleVisibilityChange) {
-        document.removeEventListener('visibilitychange', this.handleVisibilityChange);
-        window.removeEventListener('pageshow', this.handleVisibilityChange);
-      }
-    },
-
-    // Keep UI state in sync with actual audio state
-    onAudioPlay() {
-      this.isPlaying = true;
-    },
-
-    onAudioPause() {
-      // Only update if it's actually stopped (not just a brief pause)
-      setTimeout(() => {
-        const audio = this.$refs.bgMusic;
-        if (audio && audio.paused && !audio.ended) {
-          this.isPlaying = false;
-        }
-      }, 100);
     },
   },
 };
