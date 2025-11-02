@@ -48,6 +48,22 @@
         </div>
       </div>
 
+      <!-- Thought Bubble over sofa -->
+      <div 
+        class="thought-bubble" 
+        :class="{ expanded: bubbleExpanded }"
+        @click.stop="toggleBubble"
+      >
+        <div v-if="bubbleExpanded" class="bubble-text">
+          Would you like to customize your couch? Updates are coming soon...
+        </div>
+        <div v-else class="bubble-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+
     </div>
   </div>
 </template>
@@ -73,6 +89,7 @@ export default {
       isDragging: false,   // pointer is down and moving
       isDragCandidate: false,
       dragStart: { x: 0, y: 0 },   // pointerdown start (px within room)
+      bubbleExpanded: false, // thought bubble state
     }
   },
   computed: {
@@ -110,7 +127,14 @@ export default {
 
     // Actions
     openActions(id) { if (!this.isDragging) this.actionId = id },
-    closeActions() { this.actionId = null; this.draggingId = null },
+    closeActions() { 
+      this.actionId = null
+      this.draggingId = null
+      this.bubbleExpanded = false // Close bubble when clicking elsewhere
+    },
+    toggleBubble() {
+      this.bubbleExpanded = !this.bubbleExpanded
+    },
     async deletePlant(id) { 
       await this.$store.dispatch('removePlant', id)
       this.closeActions()
@@ -352,6 +376,155 @@ export default {
 @keyframes pulseHint {
   0%,100% { transform: translate(-50%, -6px) scale(1); }
   50%     { transform: translate(-50%, -6px) scale(1.05); }
+}
+
+/* Thought Bubble over sofa */
+.thought-bubble {
+  position: absolute;
+  bottom: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: pointer;
+  z-index: 100;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Small bubble with dots */
+.thought-bubble:not(.expanded) {
+  width: 60px;
+  height: 60px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: float 3s ease-in-out infinite;
+}
+
+.thought-bubble:not(.expanded):hover {
+  transform: translateX(-50%) scale(1.1);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+/* Small circles below the main bubble */
+.thought-bubble:not(.expanded)::before,
+.thought-bubble:not(.expanded)::after {
+  content: '';
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.thought-bubble:not(.expanded)::before {
+  width: 20px;
+  height: 20px;
+  bottom: -25px;
+  left: 10px;
+}
+
+.thought-bubble:not(.expanded)::after {
+  width: 12px;
+  height: 12px;
+  bottom: -40px;
+  left: 5px;
+}
+
+/* Three dots inside small bubble */
+.bubble-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.bubble-dots span {
+  width: 8px;
+  height: 8px;
+  background: #69b36b;
+  border-radius: 50%;
+  animation: bounce 1.4s ease-in-out infinite;
+}
+
+.bubble-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.bubble-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* Expanded bubble with text */
+.thought-bubble.expanded {
+  width: 280px;
+  min-height: 100px;
+  padding: 20px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+  transform: translateX(-50%) scale(1);
+}
+
+.thought-bubble.expanded::before,
+.thought-bubble.expanded::after {
+  content: '';
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.thought-bubble.expanded::before {
+  width: 24px;
+  height: 24px;
+  bottom: -28px;
+  left: 30px;
+}
+
+.thought-bubble.expanded::after {
+  width: 14px;
+  height: 14px;
+  bottom: -42px;
+  left: 20px;
+}
+
+.bubble-text {
+  font-size: 15px;
+  line-height: 1.5;
+  color: #1f2937;
+  text-align: center;
+  font-weight: 500;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-8px); }
+}
+
+@keyframes bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-8px); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (max-width: 640px) {
+  .thought-bubble:not(.expanded) {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .thought-bubble.expanded {
+    width: 240px;
+    padding: 16px;
+  }
+  
+  .bubble-text {
+    font-size: 14px;
+  }
 }
 
 </style>
