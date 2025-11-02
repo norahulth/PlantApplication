@@ -76,7 +76,7 @@
           id="plantSpecies"
           v-model.trim="manualSpecies"
           type="text"
-          placeholder="e.g. Monstera, Pothos, Ficus"
+          placeholder="e.g. Monstera, Peace Lily, Parlor Palm"
           required
         />
         <div class="controls">

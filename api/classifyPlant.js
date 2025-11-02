@@ -4,25 +4,60 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// helper: grab "species" from model output
-function extractSpecies(text) {
+// helper: map AI response to our plant categories
+function mapToPlantCategory(text) {
   try {
     const parsed = JSON.parse(text);
     if (parsed && typeof parsed.species === "string") {
-      return parsed.species;
+      return categorizeSpecies(parsed.species);
     }
   } catch (e) {
     // not valid pure JSON, try loose match
     const jsonLikeMatch = text.match(/"species"\s*:\s*"([^"]+)"/i);
     if (jsonLikeMatch) {
-      return jsonLikeMatch[1];
+      return categorizeSpecies(jsonLikeMatch[1]);
     }
-
-    const match = text.match(
-      /(pothos|monstera|ficus|orchid|palm|succulent|snake plant|aloe|unknown)/i
-    );
-    if (match) return match[0];
   }
+  
+  // fallback: try to match directly in the text
+  return categorizeSpecies(text);
+}
+
+// Map any plant identification to our specific categories
+function categorizeSpecies(species) {
+  if (!species) return "unknown";
+  
+  const lower = species.toLowerCase();
+  
+  // Check for Monstera
+  if (lower.includes("monstera")) {
+    return "Monstera";
+  }
+  
+  // Check for Pothos (also called Devil's Ivy, Epipremnum)
+  if (lower.includes("pothos") || lower.includes("epipremnum") || lower.includes("devil")) {
+    return "Pothos";
+  }
+  
+  // Check for Parlor Palm (Chamaedorea elegans)
+  if (lower.includes("parlor") || lower.includes("chamaedorea") || 
+      (lower.includes("palm") && !lower.includes("areca") && !lower.includes("majesty"))) {
+    return "Parlor Palm";
+  }
+  
+  // Check for Peace Lily (Spathiphyllum)
+  if (lower.includes("peace") || lower.includes("spathiphyllum") || 
+      (lower.includes("lily") && !lower.includes("calla") && !lower.includes("water"))) {
+    return "Peace Lily";
+  }
+  
+  // Check for Rubber Fig/Plant (Ficus elastica)
+  if (lower.includes("rubber") || lower.includes("ficus elastica") || 
+      (lower.includes("ficus") && (lower.includes("elastica") || lower.includes("rubber")))) {
+    return "Rubber Fig";
+  }
+  
+  // If not matched, return unknown
   return "unknown";
 }
 
@@ -81,10 +116,16 @@ export default async function handler(req, res) {
               type: "text",
               text:
                 "You are a houseplant identification assistant. " +
-                "Identify the most likely common houseplant species in the photo. " +
-                'Return ONLY valid JSON like {"species": "Monstera deliciosa"}. ' +
-                'If you are not at least 60% sure, respond with {"species": "unknown"}. ' +
-                "Use short common names or well known Latin names, not care tips.",
+                "Identify if the plant in the photo is one of these types:\n" +
+                "- Monstera (Monstera deliciosa)\n" +
+                "- Pothos (also known as Devil's Ivy or Epipremnum aureum)\n" +
+                "- Parlor Palm (Chamaedorea elegans or similar small palms)\n" +
+                "- Peace Lily (Spathiphyllum)\n" +
+                "- Rubber Plant/Fig (Ficus elastica)\n\n" +
+                'Return ONLY valid JSON like {"species": "Monstera"} or {"species": "Pothos"}. ' +
+                'If the plant does NOT match any of these categories or you are not at least 60% sure, ' +
+                'respond with {"species": "unknown"}. ' +
+                "Use the exact names listed above.",
             },
           ],
         },
@@ -111,8 +152,8 @@ export default async function handler(req, res) {
     const rawText = completion?.choices?.[0]?.message?.content?.trim() || "";
     console.log("[classifyPlant] OpenAI rawText:", rawText);
 
-    const speciesGuess = extractSpecies(rawText);
-    console.log("[classifyPlant] Parsed speciesGuess:", speciesGuess);
+    const speciesGuess = mapToPlantCategory(rawText);
+    console.log("[classifyPlant] Categorized as:", speciesGuess);
 
     // --- return ok ---
     return res.status(200).json({
