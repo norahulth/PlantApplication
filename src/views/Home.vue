@@ -44,6 +44,15 @@
           <button class="action-btn" @click="waterPlant(p.id)" title="Water">💧</button>
           <button class="action-btn danger" @click="deletePlant(p.id)" title="Delete">✖️</button>
         </div>
+
+        <!-- Watering animation -->
+        <div v-if="wateringPlantId === p.id" class="watering-animation">
+          <img 
+            :src="wateringFrame === 1 ? '/watering-can-full.png' : '/watering-can-empty.png'"
+            alt="Watering can"
+            class="watering-can"
+          />
+        </div>
       </div>
 
       <!-- Thought Bubble over sofa -->
@@ -90,6 +99,8 @@ export default {
       bubbleExpanded: false, // thought bubble state
       longPressTimer: null, // timer for long-press detection
       isLongPress: false,   // whether long press was triggered
+      wateringPlantId: null, // plant being watered (for animation)
+      wateringFrame: 0,      // animation frame (0=empty, 1=full, 2=empty)
     }
   },
   computed: {
@@ -121,6 +132,16 @@ export default {
       this.$nextTick(() => this.clampAllPlantsToSafeArea())
     },
     async waterPlant(id) {
+      // Start watering animation
+      this.wateringPlantId = id
+      this.wateringFrame = 0
+      
+      // Animate: empty -> full -> empty
+      setTimeout(() => { this.wateringFrame = 1 }, 200)   // Show full can after 200ms
+      setTimeout(() => { this.wateringFrame = 2 }, 600)   // Show empty can again after 600ms
+      setTimeout(() => { this.wateringPlantId = null }, 1000)  // Hide after 1s
+      
+      // Actually water the plant
       await this.$store.dispatch('waterPlant', id)
       this.closeActions()
     },
@@ -386,11 +407,56 @@ export default {
 
 :global(html), :global(body) { height: 100%; overflow: hidden; }
 
+/* Watering animation */
+.watering-animation {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translate(-50%, -20px);
+  pointer-events: none;
+  z-index: 200;
+  animation: wateringDrop 1s ease-out;
+}
+
+.watering-can {
+  width: 80px;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+  animation: wateringTilt 0.8s ease-in-out;
+}
+
+@keyframes wateringDrop {
+  0% { 
+    opacity: 0; 
+    transform: translate(-50%, -60px) scale(0.5);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -30px) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -20px) scale(1);
+  }
+  100% { 
+    opacity: 0; 
+    transform: translate(-50%, -10px) scale(0.9);
+  }
+}
+
+@keyframes wateringTilt {
+  0%, 100% { transform: rotate(0deg); }
+  30%, 70% { transform: rotate(-15deg); }
+}
+
 @media (max-width: 640px) {
   .pot { width: 90px; }
   .label .name { font-size: 14px; }
   .label .species { font-size: 13px; }
   .action-btn { width: 36px; height: 36px; font-size: 18px; }
+  
+  .watering-can { width: 60px; }
 }
 .callout {
   position: absolute;
