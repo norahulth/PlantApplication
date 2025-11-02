@@ -1,53 +1,20 @@
 import { createStore } from 'vuex'
 
 // Generate or retrieve a unique user ID for this device
-const getUserId = async () => {
+const getUserId = () => {
   let userId = localStorage.getItem('userId')
-  
-  // If no userId in localStorage, try to recover from push subscription
-  if (!userId && typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window) {
-    try {
-      const reg = await navigator.serviceWorker.ready
-      const sub = await reg.pushManager.getSubscription()
-      
-      if (sub?.endpoint) {
-        // Try to get userId from server using subscription endpoint
-        const res = await fetch(`/api/getUserFromSub?endpoint=${encodeURIComponent(sub.endpoint)}`)
-        if (res.ok) {
-          const data = await res.json()
-          if (data.userId) {
-            userId = data.userId
-            localStorage.setItem('userId', userId)
-            console.log('✅ Recovered userId from subscription:', userId)
-          }
-        }
-      }
-    } catch (err) {
-      console.warn('Could not recover userId from subscription:', err)
-    }
-  }
-  
-  // If still no userId, create a new one
   if (!userId) {
     userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     localStorage.setItem('userId', userId)
     console.log('🆕 Created new userId:', userId)
   }
-  
   return userId
 }
 
-// Make getUserId async and handle it properly
-let userId = null
-const userIdPromise = getUserId().then(id => {
-  userId = id
-  return id
-})
+const userId = getUserId()
 
-// Helper to call API - wait for userId to be ready
+// Helper to call API
 const apiCall = async (method, endpoint, body = null) => {
-  await userIdPromise // Wait for userId to be ready
-  
   const options = {
     method,
     headers: {
