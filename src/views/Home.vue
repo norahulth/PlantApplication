@@ -23,10 +23,9 @@
         v-for="p in plants"
         :key="p.id"
         class="plant"
-        :class="{ movable: draggingId === p.id }"
+        :class="{ movable: true }"
         :style="{ left: p.x + '%', top: p.y + '%' }"
         :title="`${p.name} (${p.species})`"
-        @click.stop="openActions(p.id)"
         @pointerdown.stop="beginDrag(p.id, $event)"
       >
         <!-- Water callout (only when unwatered) -->
@@ -43,7 +42,6 @@
         <!-- Action menu -->
         <div v-if="actionId === p.id" class="action-menu" @click.stop>
           <button class="action-btn" @click="waterPlant(p.id)" title="Water">💧</button>
-          <button class="action-btn" @click="enableMove(p.id)" title="Move">↔️</button>
           <button class="action-btn danger" @click="deletePlant(p.id)" title="Delete">✖️</button>
         </div>
       </div>
@@ -126,7 +124,11 @@ export default {
     },
 
     // Actions
-    openActions(id) { if (!this.isDragging) this.actionId = id },
+    openActions(id) { 
+      if (!this.isDragging) {
+        this.actionId = id
+      }
+    },
     closeActions() { 
       this.actionId = null
       this.draggingId = null
@@ -141,32 +143,22 @@ export default {
     },
 
     onRoomPointerDown(e) {
-  // Tap-to-place: if user already picked "Move" (draggingId set) and taps the room (not a plant),
-  // just place the plant there (clamped) without dragging.
-  if (!this.draggingId) return
-  const target = e.target
-  if (target.closest('.plant')) return  // ignore taps on plants; those go through beginDrag
-  this.updatePositionFromEvent(e)       // place immediately
-  this.draggingId = null                // exit move mode
-  },
+      // Just close menus when clicking on room background
+      // (Plants handle their own drag logic)
+    },
 
-  enableMove(id) {
-    this.draggingId = id
-    this.actionId = null
-    // User can either drag the plant OR tap anywhere in the room to place it.
-  },
-
-  beginDrag(id, e) {
-    if (this.draggingId !== id) return
-    const room = this.$el.querySelector('.room')
-    if (!room) return
-    const rect = room.getBoundingClientRect()
-    this.isDragCandidate = true
-    this.isDragging = false
-    this.dragStart.x = e.clientX - rect.left
-    this.dragStart.y = e.clientY - rect.top
-    e.currentTarget.setPointerCapture?.(e.pointerId)
-  },
+    beginDrag(id, e) {
+      // Start a potential drag for this plant
+      this.draggingId = id
+      const room = this.$el.querySelector('.room')
+      if (!room) return
+      const rect = room.getBoundingClientRect()
+      this.isDragCandidate = true
+      this.isDragging = false
+      this.dragStart.x = e.clientX - rect.left
+      this.dragStart.y = e.clientY - rect.top
+      e.currentTarget.setPointerCapture?.(e.pointerId)
+    },
 
   onPointerMove(e) {
     if (!this.draggingId) return
@@ -197,14 +189,19 @@ export default {
 
   onPointerUp() {
     if (!this.draggingId) return
+    
+    const plantId = this.draggingId
     this.isDragCandidate = false
+    
     if (this.isDragging) {
-      // already saved final position on move
+      // User dragged the plant - position already saved
       this.isDragging = false
       this.$el.classList.remove('dragging')
     } else {
-      // It was a light tap on the plant while in move mode — do nothing special here.
+      // It was a tap (no drag) - open the action menu
+      this.openActions(plantId)
     }
+    
     this.draggingId = null
   },
 
@@ -286,9 +283,9 @@ export default {
   position: absolute;
   transform: translate(-50%, -100%);
   text-decoration: none;
+  cursor: grab;
 }
-.plant.movable { cursor: grab; }
-.plant.movable:active { cursor: grabbing; }
+.plant:active { cursor: grabbing; }
 
 .pot {
   width: 140px; height: auto;
