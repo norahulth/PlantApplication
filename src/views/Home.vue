@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-pan" :class="{ dragging: isDragging }" @click="closeActions">
+  <div class="bg-pan" :class="{ dragging: isDragging }" @click.self="closeActions">
     <div
       class="room"
       :style="{ width: roomWidth + 'px', height: roomHeight + 'px' }"
@@ -23,10 +23,12 @@
         v-for="p in plants"
         :key="p.id"
         class="plant"
-        :class="{ movable: true }"
+        :class="{ dragging: isDragging && draggingId === p.id }"
         :style="{ left: p.x + '%', top: p.y + '%' }"
         :title="`${p.name} (${p.species})`"
         @pointerdown.stop="beginDrag(p.id, $event)"
+        @click.stop
+        @contextmenu.prevent="openActions(p.id)"
       >
         <!-- Water callout (only when unwatered) -->
         <div v-if="!p.watered" class="callout">
@@ -101,6 +103,7 @@ export default {
       isLongPress: false,   // whether long press was triggered
       wateringPlantId: null, // plant being watered (for animation)
       wateringFrame: 0,      // animation frame (0=empty, 1=full, 2=empty)
+      isTouchDevice: false,  // detect if touch device
     }
   },
   computed: {
@@ -108,6 +111,9 @@ export default {
     plants() { return this.allPlants }
   },
   mounted() {
+    // Detect if this is a touch device
+    this.isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+    
     this.roomHeight = window.innerHeight
     this.$nextTick(() => {
       this.updateRoomSize()
@@ -165,7 +171,7 @@ export default {
       this.closeActions()
     },
 
-    onRoomPointerDown(e) {
+    onRoomPointerDown(/* e */) {
       // Just close menus when clicking on room background
       // (Plants handle their own drag logic)
     },
@@ -176,7 +182,7 @@ export default {
         clearTimeout(this.longPressTimer)
       }
       
-      // Store the plant we're potentially dragging
+      // Store the plant we're potentially dragging/clicking
       this.draggingId = id
       this.isLongPress = false
       this.isDragging = false
@@ -188,24 +194,28 @@ export default {
       this.dragStart.x = e.clientX - rect.left
       this.dragStart.y = e.clientY - rect.top
       
-      // Set up long-press detection (500ms)
-      this.longPressTimer = setTimeout(() => {
+      if (this.isTouchDevice) {
+        // Mobile: Use long-press (500ms) before allowing drag
+        this.longPressTimer = setTimeout(() => {
+          this.isLongPress = true
+          this.isDragCandidate = true
+          // Provide haptic feedback on mobile
+          if (navigator.vibrate) {
+            navigator.vibrate(50)
+          }
+        }, 500)
+      } else {
+        // Desktop: Allow immediate drag on movement
         this.isLongPress = true
         this.isDragCandidate = true
-        // Provide haptic feedback on mobile
-        if (navigator.vibrate) {
-          navigator.vibrate(50)
-        }
-      }, 500)
+      }
       
       e.currentTarget.setPointerCapture?.(e.pointerId)
     },
 
-  onPointerMove(e) {
-    if (!this.draggingId) return
-    
-    // If long press hasn't been triggered yet, cancel it if user moves too much
-    if (!this.isLongPress && this.longPressTimer) {
+    onPointerMove(e) {
+      if (!this.draggingId) return
+      
       const room = this.$el.querySelector('.room')
       if (!room) return
       const rect = room.getBoundingClientRect()
@@ -213,121 +223,125 @@ export default {
       const cy = e.clientY - rect.top
       const dx = cx - this.dragStart.x
       const dy = cy - this.dragStart.y
+      const distance = Math.hypot(dx, dy)
       
-      // If moved beyond threshold before long press, cancel the long press
-      if (Math.hypot(dx, dy) >= DRAG_THRESHOLD) {
+      // Mobile: If long press hasn't been triggered yet, cancel it if user moves too much
+      if (this.isTouchDevice && !this.isLongPress && this.longPressTimer) {
+        // If moved beyond threshold before long press, cancel the long press
+        if (distance >= DRAG_THRESHOLD) {
+          clearTimeout(this.longPressTimer)
+          this.longPressTimer = null
+          return
+        }
+      }
+      
+      // Only allow dragging if long press was triggered (always true on desktop)
+      if (!this.isLongPress) return
+
+      // Start dragging on first movement beyond threshold
+      if (this.isDragCandidate && !this.isDragging) {
+        if (distance >= DRAG_THRESHOLD) {
+          this.isDragging = true
+          this.$el.classList.add('dragging')
+        } else {
+          return
+        }
+      }
+
+      if (this.isDragging) {
+        e.preventDefault()
+        this.updatePositionFromCoords(cx, cy, rect)
+      }
+    },
+
+    onPointerUp(e) {
+      // Clear long press timer if still running
+      if (this.longPressTimer) {
         clearTimeout(this.longPressTimer)
         this.longPressTimer = null
-        return
       }
-    }
-    
-    // Only allow dragging if long press was triggered
-    if (!this.isLongPress) return
-    
-    const room = this.$el.querySelector('.room')
-    if (!room) return
-    const rect = room.getBoundingClientRect()
-    const cx = e.clientX - rect.left
-    const cy = e.clientY - rect.top
-
-    // Start dragging on first movement after long press
-    if (this.isDragCandidate && !this.isDragging) {
-      const dx = cx - this.dragStart.x
-      const dy = cy - this.dragStart.y
-      if (Math.hypot(dx, dy) >= DRAG_THRESHOLD) {
-        this.isDragging = true
-        this.$el.classList.add('dragging')
+      
+      if (!this.draggingId) return
+      
+      const plantId = this.draggingId
+      this.isDragCandidate = false
+      
+      if (this.isDragging) {
+        // User dragged the plant - position already saved
+        this.isDragging = false
+        this.$el.classList.remove('dragging')
       } else {
-        return
+        // No drag occurred - open menu
+        if (this.isTouchDevice) {
+          // Mobile: Only open if it was a quick tap (no long press)
+          if (!this.isLongPress) {
+            e?.stopPropagation?.()
+            this.openActions(plantId)
+          }
+        } else {
+          // Desktop: Always open menu if no drag happened
+          e?.stopPropagation?.()
+          this.openActions(plantId)
+        }
       }
-    }
+      
+      this.draggingId = null
+      this.isLongPress = false
+    },
 
-    if (this.isDragging) {
-      e.preventDefault()
-      this.updatePositionFromCoords(cx, cy, rect)
-    }
-  },
+    updatePositionFromEvent(e) {
+      const room = this.$el.querySelector('.room')
+      if (!room || !this.draggingId) return
+      const rect = room.getBoundingClientRect()
+      const px = e.clientX - rect.left
+      const py = e.clientY - rect.top
+      this.updatePositionFromCoords(px, py, rect)
+    },
 
-  onPointerUp() {
-    // Clear long press timer if still running
-    if (this.longPressTimer) {
-      clearTimeout(this.longPressTimer)
-      this.longPressTimer = null
-    }
-    
-    if (!this.draggingId) return
-    
-    const plantId = this.draggingId
-    this.isDragCandidate = false
-    
-    if (this.isDragging) {
-      // User dragged the plant - position already saved
-      this.isDragging = false
-      this.$el.classList.remove('dragging')
-    } else if (!this.isLongPress) {
-      // It was a quick tap (no long press, no drag) - open the action menu
-      this.openActions(plantId)
-    }
-    // If it was a long press but no drag, do nothing
-    
-    this.draggingId = null
-    this.isLongPress = false
-  },
-
-  updatePositionFromEvent(e) {
-    const room = this.$el.querySelector('.room')
-    if (!room || !this.draggingId) return
-    const rect = room.getBoundingClientRect()
-    const px = e.clientX - rect.left
-    const py = e.clientY - rect.top
-    this.updatePositionFromCoords(px, py, rect)
-  },
-
-  updatePositionFromCoords(px, py, rect) {
-    // Clamp in pixels
-    const minX = EDGE_PAD_X
-    const maxX = rect.width - EDGE_PAD_X
-    const minY = EDGE_PAD_TOP
-    const maxY = rect.height - EDGE_PAD_BOTTOM
-
-    const clampedX = Math.max(minX, Math.min(maxX, px))
-    const clampedY = Math.max(minY, Math.min(maxY, py))
-
-    // Convert to % and store
-    const xPct = Math.round((clampedX / rect.width) * 100)
-    const yPct = Math.round((clampedY / rect.height) * 100)
-
-    this.$store.dispatch('updatePlantPosition', { id: this.draggingId, x: xPct, y: yPct })
-  },
-
-  clampAllPlantsToSafeArea() {
-    const room = this.$el.querySelector('.room')
-    if (!room) return
-    const rect = room.getBoundingClientRect()
-
-    const minX = EDGE_PAD_X
-    const maxX = rect.width - EDGE_PAD_X
-    const minY = EDGE_PAD_TOP
-    const maxY = rect.height - EDGE_PAD_BOTTOM
-
-    this.plants.forEach(p => {
-      // convert stored % to px
-      const px = (p.x / 100) * rect.width
-      const py = (p.y / 100) * rect.height
+    updatePositionFromCoords(px, py, rect) {
+      // Clamp in pixels
+      const minX = EDGE_PAD_X
+      const maxX = rect.width - EDGE_PAD_X
+      const minY = EDGE_PAD_TOP
+      const maxY = rect.height - EDGE_PAD_BOTTOM
 
       const clampedX = Math.max(minX, Math.min(maxX, px))
       const clampedY = Math.max(minY, Math.min(maxY, py))
 
-      // back to %
+      // Convert to % and store
       const xPct = Math.round((clampedX / rect.width) * 100)
       const yPct = Math.round((clampedY / rect.height) * 100)
 
-      if (xPct !== p.x || yPct !== p.y) {
-        this.$store.dispatch('updatePlantPosition', { id: p.id, x: xPct, y: yPct })
-      }
-    })
-  },
+      this.$store.dispatch('updatePlantPosition', { id: this.draggingId, x: xPct, y: yPct })
+    },
+
+    clampAllPlantsToSafeArea() {
+      const room = this.$el.querySelector('.room')
+      if (!room) return
+      const rect = room.getBoundingClientRect()
+
+      const minX = EDGE_PAD_X
+      const maxX = rect.width - EDGE_PAD_X
+      const minY = EDGE_PAD_TOP
+      const maxY = rect.height - EDGE_PAD_BOTTOM
+
+      this.plants.forEach(p => {
+        // convert stored % to px
+        const px = (p.x / 100) * rect.width
+        const py = (p.y / 100) * rect.height
+
+        const clampedX = Math.max(minX, Math.min(maxX, px))
+        const clampedY = Math.max(minY, Math.min(maxY, py))
+
+        // back to %
+        const xPct = Math.round((clampedX / rect.width) * 100)
+        const yPct = Math.round((clampedY / rect.height) * 100)
+
+        if (xPct !== p.x || yPct !== p.y) {
+          this.$store.dispatch('updatePlantPosition', { id: p.id, x: xPct, y: yPct })
+        }
+      })
+    },
   }
 }
 </script>
@@ -358,6 +372,10 @@ export default {
   user-select: none;
   -webkit-touch-callout: none; /* Prevent iOS context menu */
   touch-action: none; /* Prevent default touch behaviors */
+}
+
+.plant.dragging {
+  cursor: grabbing !important;
 }
 
 .pot {
@@ -394,6 +412,7 @@ export default {
   background: rgba(255,255,255,0.9);
   border-radius: 999px; box-shadow: 0 8px 18px rgba(0,0,0,.18);
   backdrop-filter: blur(4px);
+  z-index: 150; /* keep on top */
 }
 .action-btn {
   width: 40px; height: 40px; border: none; border-radius: 999px;
@@ -411,7 +430,7 @@ export default {
 .watering-animation {
   position: absolute;
   top: 0;
-  left: -100px;
+  left: -60px;
   transform: translateY(0);
   pointer-events: none;
   z-index: 200;
@@ -629,5 +648,4 @@ export default {
     font-size: 14px;
   }
 }
-
 </style>
