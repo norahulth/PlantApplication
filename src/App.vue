@@ -98,7 +98,7 @@
     </div>
 
     <!-- Audio element -->
-    <audio ref="bgMusic" loop>
+    <audio ref="bgMusic" loop preload="metadata" playsinline>
       <source src="/background-music.mp3" type="audio/mpeg">
     </audio>
   </div>
@@ -175,7 +175,7 @@ export default {
       this.showPushPrompt = false;
     },
 
-    toggleMusic() {
+    async toggleMusic() {
       const audio = this.$refs.bgMusic;
       if (!audio) return;
 
@@ -183,10 +183,20 @@ export default {
         audio.pause();
         this.isPlaying = false;
       } else {
-        audio.play().catch(err => {
-          console.warn('Audio play failed:', err);
-        });
-        this.isPlaying = true;
+        try {
+          // Reset audio to beginning if it ended
+          if (audio.ended) {
+            audio.currentTime = 0;
+          }
+          
+          // Try to play
+          await audio.play();
+          this.isPlaying = true;
+        } catch (err) {
+          console.error('Audio play failed:', err);
+          // Don't set isPlaying to true if play failed
+          this.isPlaying = false;
+        }
       }
     },
   },
