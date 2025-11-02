@@ -268,7 +268,15 @@ export default {
 .choice-buttons { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; align-items: stretch; justify-content: center; }
 .upload-wrap { display: grid; gap: 10px; justify-items: center; }
 .photo-wrap { display: grid; gap: 12px; justify-items: center; }
-.photo-wrap img { width: min(100%, 480px); border-radius: 12px; }
+.photo-wrap img { 
+  max-width: min(100%, 480px); 
+  max-height: 50vh; 
+  width: auto; 
+  height: auto; 
+  object-fit: contain; 
+  border-radius: 12px; 
+  display: block;
+}
 .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 .btn { border: none; padding: 12px 16px; border-radius: 12px; background: #4caf50; color: #fff; font-weight: 600; cursor: pointer; }
 .btn.big { font-size: 1rem; }
