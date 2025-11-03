@@ -2,22 +2,19 @@
   <div class="app-shell">
     <router-view />
 
-  <!-- Push soft-ask -->
-  <!-- Push soft-ask modal -->
-<div v-if="showPushPrompt" class="push-overlay">
-  <div class="push-modal" @click.stop>
-    <div class="push-text">Enable daily plant reminders?</div>
+    <!-- Push soft-ask modal -->
+    <div v-if="showPushPrompt" class="push-overlay">
+      <div class="push-modal" @click.stop>
+        <div class="push-text">Enable daily plant reminders?</div>
 
-    <div class="push-actions">
-      <button class="btn btn-enable" @click="enablePush" :disabled="notifBusy">
-        {{ notifBusy ? 'Please wait…' : 'Enable notifications' }}
-      </button>
-      <button class="btn btn-cancel" @click="dismissPush">Not now</button>
+        <div class="push-actions">
+          <button class="btn btn-enable" @click="enablePush" :disabled="notifBusy">
+            {{ notifBusy ? 'Please wait…' : 'Enable notifications' }}
+          </button>
+          <button class="btn btn-cancel" @click="dismissPush">Not now</button>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
-
-
 
     <!-- Floating buttons -->
     <div class="fab-wrap">
@@ -97,10 +94,8 @@
       </button>
     </div>
 
-    <!-- Audio element -->
-    <audio ref="bgMusic" loop>
-      <source src="/background-music.mp3" type="audio/mpeg">
-    </audio>
+    <!-- Audio element (bind src so we can clear it when stopping) -->
+    <audio ref="bgMusic" :src="musicSrc" loop></audio>
   </div>
 </template>
 
@@ -109,6 +104,7 @@ import "bootstrap";
 import { subscribeToPush } from "./main";
 
 const PUSH_PROMPT_KEY = "pushPromptV1";
+const DEFAULT_MUSIC_SRC = "/background-music.mp3";
 
 export default {
   name: "App",
@@ -121,16 +117,20 @@ export default {
         "serviceWorker" in navigator &&
         "PushManager" in window,
       isPlaying: false,
+      musicSrc: DEFAULT_MUSIC_SRC, // bound to <audio>
     };
   },
   mounted() {
     this.maybeShowPushPrompt();
-    this.setupVisibilityListener();
+    this.setupLifecycleListeners();
   },
   beforeUnmount() {
-    // Clean up visibility listener
-    if (typeof document !== 'undefined') {
-      document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+    // remove listeners
+    document.removeEventListener("visibilitychange", this._onVisibilityChange);
+    window.removeEventListener("pagehide", this._onPageHide);
+    window.removeEventListener("blur", this._onBlur);
+    if (typeof this._removeAfterEach === "function") {
+      this._removeAfterEach();
     }
   },
   methods: {
@@ -142,12 +142,10 @@ export default {
       if (!this.pushSupported) return;
       if (typeof Notification === "undefined") return;
 
-      // don’t re-ask if they’ve seen it or if browser perm is already decided
       const seen = localStorage.getItem(PUSH_PROMPT_KEY);
       if (seen) return;
       if (Notification.permission !== "default") return;
 
-      // if already subscribed, don’t show
       try {
         const reg = await navigator.serviceWorker.ready;
         const sub = await reg.pushManager.getSubscription();
@@ -157,19 +155,16 @@ export default {
         }
       } catch (_) {}
 
-      // small delay so it doesn’t pop instantly
       setTimeout(() => (this.showPushPrompt = true), 600);
     },
 
     async enablePush() {
       this.notifBusy = true;
       try {
-        // Triggers system permission prompt and POSTs to /api/subscribe
         await subscribeToPush();
         localStorage.setItem(PUSH_PROMPT_KEY, "asked");
       } catch (e) {
         console.error("Push subscribe failed", e);
-        // still mark as asked so we don’t nag repeatedly
         localStorage.setItem(PUSH_PROMPT_KEY, "asked");
       } finally {
         this.notifBusy = false;
@@ -182,23 +177,53 @@ export default {
       this.showPushPrompt = false;
     },
 
-    setupVisibilityListener() {
-      if (typeof document === 'undefined') return;
-      
-      // Listen for when the app goes to background (screen lock, tab switch, etc.)
-      document.addEventListener('visibilitychange', this.handleVisibilityChange);
+    setupLifecycleListeners() {
+      // stop music whenever the app is not foregrounded / is left
+      this._onVisibilityChange = () => {
+        if (document.visibilityState !== "visible") this.stopMusic();
+      };
+      this._onPageHide = () => this.stopMusic();
+      this._onBlur = () => this.stopMusic();
+
+      document.addEventListener("visibilitychange", this._onVisibilityChange, { passive: true });
+      window.addEventListener("pagehide", this._onPageHide, { passive: true });
+      window.addEventListener("blur", this._onBlur, { passive: true });
+
+      // also stop when navigating between routes
+      if (this.$router?.afterEach) {
+        this._removeAfterEach = this.$router.afterEach(() => this.stopMusic());
+      }
     },
 
-    handleVisibilityChange() {
+    stopMusic() {
       const audio = this.$refs.bgMusic;
       if (!audio) return;
 
-      // When the page becomes hidden (user locks screen or switches apps)
-      if (document.hidden && this.isPlaying) {
+      // fully stop audio
+      try {
         audio.pause();
         audio.currentTime = 0;
-        this.isPlaying = false;
-      }
+      } catch {}
+
+      // clear Media Session so iOS drops the lock-screen controls
+      try {
+        if ("mediaSession" in navigator) {
+          navigator.mediaSession.playbackState = "none";
+          navigator.mediaSession.metadata = null;
+          ["play","pause","seekbackward","seekforward","previoustrack","nexttrack"]
+            .forEach(a => { try { navigator.mediaSession.setActionHandler(a, null); } catch {} });
+        }
+      } catch {}
+
+      // clear src to force the OS to release the session immediately (helps on iOS PWAs)
+      try {
+        if (this.musicSrc) {
+          this.musicSrc = ""; // unbinds audio file
+          audio.load();
+        }
+      } catch {}
+
+      this.isPlaying = false;
     },
 
     toggleMusic() {
@@ -206,23 +231,33 @@ export default {
       if (!audio) return;
 
       if (this.isPlaying) {
-        // Stop and reset to beginning
-        audio.pause();
-        audio.currentTime = 0;
-        this.isPlaying = false;
+        this.stopMusic();
       } else {
-        // Start from beginning
+        // restore src if we cleared it previously
+        if (!this.musicSrc) {
+          this.musicSrc = DEFAULT_MUSIC_SRC;
+          audio.load();
+        }
         audio.currentTime = 0;
-        audio.play().catch(err => {
-          console.warn('Audio play failed:', err);
+
+        audio.play().then(() => {
+          // optional: set minimal media session metadata while playing
+          if ("mediaSession" in navigator) {
+            navigator.mediaSession.playbackState = "playing";
+            try {
+              navigator.mediaSession.metadata = new MediaMetadata({ title: "PlantApp" });
+            } catch {}
+          }
+          this.isPlaying = true;
+        }).catch(err => {
+          console.warn("Audio play failed:", err);
+          this.isPlaying = false;
         });
-        this.isPlaying = true;
       }
     },
   },
 };
 </script>
-
 
 <style>
 @import url("bootstrap/dist/css/bootstrap.css");
@@ -266,17 +301,17 @@ body,
 
 /* Plus button color */
 .fab-add {
-  background-color: #4caf50; /* green */
+  background-color: #4caf50;
 }
 
 /* Home button color */
 .fab-home {
-  background-color: #3b82f6; /* blue */
+  background-color: #3b82f6;
 }
 
 /* Music button color */
 .fab-music {
-  background-color: #8b5cf6; /* purple */
+  background-color: #8b5cf6;
 }
 
 /* Hover effect */
@@ -290,6 +325,7 @@ body,
     transition: none;
   }
 }
+
 /* Overlay covers full screen */
 .push-overlay {
   position: fixed;
