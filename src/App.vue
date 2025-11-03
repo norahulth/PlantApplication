@@ -125,6 +125,13 @@ export default {
   },
   mounted() {
     this.maybeShowPushPrompt();
+    this.setupVisibilityListener();
+  },
+  beforeUnmount() {
+    // Clean up visibility listener
+    if (typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+    }
   },
   methods: {
     redirect(target) {
@@ -175,6 +182,25 @@ export default {
       this.showPushPrompt = false;
     },
 
+    setupVisibilityListener() {
+      if (typeof document === 'undefined') return;
+      
+      // Listen for when the app goes to background (screen lock, tab switch, etc.)
+      document.addEventListener('visibilitychange', this.handleVisibilityChange);
+    },
+
+    handleVisibilityChange() {
+      const audio = this.$refs.bgMusic;
+      if (!audio) return;
+
+      // When the page becomes hidden (user locks screen or switches apps)
+      if (document.hidden && this.isPlaying) {
+        audio.pause();
+        audio.currentTime = 0;
+        this.isPlaying = false;
+      }
+    },
+
     toggleMusic() {
       const audio = this.$refs.bgMusic;
       if (!audio) return;
@@ -184,7 +210,6 @@ export default {
         audio.pause();
         audio.currentTime = 0;
         this.isPlaying = false;
-        this.updateMediaSession();
       } else {
         // Start from beginning
         audio.currentTime = 0;
@@ -192,51 +217,6 @@ export default {
           console.warn('Audio play failed:', err);
         });
         this.isPlaying = true;
-        this.setupMediaSession();
-      }
-    },
-
-    setupMediaSession() {
-      if ('mediaSession' in navigator) {
-        navigator.mediaSession.metadata = new MediaMetadata({
-          title: 'PlantApp',
-          artist: 'Background Music',
-          album: 'PlantApp',
-          artwork: [
-            { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
-            { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' },
-          ]
-        });
-
-        // Set up action handlers for lock screen controls
-        navigator.mediaSession.setActionHandler('play', () => {
-          const audio = this.$refs.bgMusic;
-          if (audio && !this.isPlaying) {
-            audio.currentTime = 0;
-            audio.play();
-            this.isPlaying = true;
-            this.updateMediaSession();
-          }
-        });
-
-        navigator.mediaSession.setActionHandler('pause', () => {
-          const audio = this.$refs.bgMusic;
-          if (audio && this.isPlaying) {
-            audio.pause();
-            audio.currentTime = 0;
-            this.isPlaying = false;
-            this.updateMediaSession();
-          }
-        });
-
-        // Update playback state
-        this.updateMediaSession();
-      }
-    },
-
-    updateMediaSession() {
-      if ('mediaSession' in navigator) {
-        navigator.mediaSession.playbackState = this.isPlaying ? 'playing' : 'paused';
       }
     },
   },
