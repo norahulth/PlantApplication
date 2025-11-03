@@ -269,7 +269,7 @@ body,
   height: 100%;
   margin: 0;
   font-family: Garamond, serif;
-  background: #92B780;
+  background: #839170FF;
 }
 
 /* Container for floating buttons */
@@ -301,17 +301,17 @@ body,
 
 /* Plus button color */
 .fab-add {
-  background-color: #4caf50;
+  background-color: #004643;
 }
 
 /* Home button color */
 .fab-home {
-  background-color: #3b82f6;
+  background-color: #6380B8;
 }
 
 /* Music button color */
 .fab-music {
-  background-color: #8b5cf6;
+  background-color: #8B5A9F;
 }
 
 /* Hover effect */
@@ -375,12 +375,12 @@ body,
 }
 
 .btn-enable {
-  background: #2e7d32;
+  background: #4A8F66;
   color: #fff;
 }
 .btn-enable:hover:not(:disabled) {
   transform: translateY(-1px);
-  background: #1b5e20;
+  background: #3a7552;
 }
 .btn-enable:disabled {
   opacity: 0.6;
@@ -388,11 +388,11 @@ body,
 }
 
 .btn-cancel {
-  background: #e2e8f0;
-  color: #0f172a;
+  background: #8897A8;
+  color: #fff;
 }
 .btn-cancel:hover {
-  background: #cbd5e1;
+  background: #6d7c8d;
 }
 
 /* subtle entrance animation */

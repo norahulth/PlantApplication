@@ -196,7 +196,7 @@ async function save() {
 .nav:active { transform: scale(0.95); }
 
 .actions { display:flex; gap:10px; margin-top: 12px; }
-.btn { padding:10px 16px; border-radius:24px; border:0; background:#69b36b; color:#fff; font-weight:600; cursor:pointer; }
-.btn-grey { background:#9ca3af; }
-.ghost { border:1px solid #cfd; background:#f9fff9; color:#2b6; padding:8px 12px; border-radius:18px; }
+.btn { padding:10px 16px; border-radius:24px; border:0; background:#F2CF9EFF; color:#2c412f; font-weight:600; cursor:pointer; }
+.btn-grey { background:#F2CF9EFF; }
+.ghost { border:1px solid #F2CF9EFF; background:#f9fff9; color:#2c412f; padding:8px 12px; border-radius:18px; }
 </style>

@@ -267,7 +267,7 @@ export default {
   align-items: center; 
   justify-content: center;
 }
-.title { margin: 0 0 24px; font-size: 1.8rem; font-weight: 700; text-align: center; color: #064e3b; }
+.title { margin: 0 0 24px; font-size: 1.8rem; font-weight: 700; text-align: center; color: #F2CF9EFF; }
 .mode-picker { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 320px; align-items: stretch; }
 .camera-section, .manual-section { width: 100%; max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
 .section-header { position: relative; width: 100%; max-width: 720px; display: flex; justify-content: center; align-items: center; margin: 12px 0 20px; padding-top: 56px; }
@@ -285,19 +285,19 @@ export default {
   display: block;
 }
 .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-/* Light grey button colors */
+/* Peach button with dark green text */
 .btn { 
   border: none; 
   padding: 12px 16px; 
   border-radius: 12px; 
-  background: #d1d5db; 
-  color: #1f2937; 
+  background: #F2CF9EFF; 
+  color: #2c412f; 
   font-weight: 600; 
   cursor: pointer; 
   transition: transform 0.1s ease, background 0.15s ease;
 }
 .btn:hover:not(:disabled) {
-  background: #9ca3af;
+  background: #e6ba85;
   transform: translateY(-1px);
 }
 .btn:disabled {
@@ -306,16 +306,16 @@ export default {
 }
 .btn.big { font-size: 1rem; }
 .btn-secondary { 
-  background: #d1d5db; 
+  background: #F2CF9EFF; 
 }
 .btn-secondary:hover:not(:disabled) {
-  background: #9ca3af;
+  background: #e6ba85;
 }
 .btn-accent { 
-  background: #d1d5db; 
+  background: #F2CF9EFF; 
 }
 .btn-accent:hover:not(:disabled) {
-  background: #9ca3af;
+  background: #e6ba85;
 }
 .manual-form { width: 100%; max-width: 420px; display: grid; gap: 12px; justify-items: center; text-align: center; }
 .manual-form label { width: 100%; font-weight: 600; color: #064e3b; }
