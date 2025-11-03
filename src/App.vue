@@ -180,13 +180,63 @@ export default {
       if (!audio) return;
 
       if (this.isPlaying) {
+        // Stop and reset to beginning
         audio.pause();
+        audio.currentTime = 0;
         this.isPlaying = false;
+        this.updateMediaSession();
       } else {
+        // Start from beginning
+        audio.currentTime = 0;
         audio.play().catch(err => {
           console.warn('Audio play failed:', err);
         });
         this.isPlaying = true;
+        this.setupMediaSession();
+      }
+    },
+
+    setupMediaSession() {
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: 'PlantApp',
+          artist: 'Background Music',
+          album: 'PlantApp',
+          artwork: [
+            { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+            { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+          ]
+        });
+
+        // Set up action handlers for lock screen controls
+        navigator.mediaSession.setActionHandler('play', () => {
+          const audio = this.$refs.bgMusic;
+          if (audio && !this.isPlaying) {
+            audio.currentTime = 0;
+            audio.play();
+            this.isPlaying = true;
+            this.updateMediaSession();
+          }
+        });
+
+        navigator.mediaSession.setActionHandler('pause', () => {
+          const audio = this.$refs.bgMusic;
+          if (audio && this.isPlaying) {
+            audio.pause();
+            audio.currentTime = 0;
+            this.isPlaying = false;
+            this.updateMediaSession();
+          }
+        });
+
+        // Update playback state
+        this.updateMediaSession();
+      }
+    },
+
+    updateMediaSession() {
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = this.isPlaying ? 'playing' : 'paused';
       }
     },
   },
