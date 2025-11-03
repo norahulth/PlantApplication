@@ -67,12 +67,22 @@ export default createStore({
   },
   actions: {
     // Load plants from Upstash
-    async loadPlants({ commit }) {
+    async loadPlants({ commit, state, dispatch }) {
       try {
         commit('setLoading', true)
         commit('setError', null)
         const data = await apiCall('GET', `/api/plants?userId=${userId}`)
-        commit('setPlants', data.plants || [])
+        const fetchedPlants = data.plants || []
+        
+        // If no plants found for this userId but there are existing plants in the store
+        // Connect the existing plants to this userId instead of removing them
+        if (fetchedPlants.length === 0 && state.plants.length > 0) {
+          console.log('🔗 Connecting existing plants to userId:', userId)
+          await dispatch('savePlants')
+          // Keep existing plants in the store
+        } else {
+          commit('setPlants', fetchedPlants)
+        }
       } catch (error) {
         console.error('Failed to load plants:', error)
         commit('setError', error.message)
