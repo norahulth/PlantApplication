@@ -1016,8 +1016,8 @@ export default {
 /* PWA mode adjustments for mobile */
 @media (max-width: 640px) and (display-mode: standalone) {
   .gubbs-img {
-    bottom: 30vh;  /* Adjust for PWA standalone mode */
-    left: 54%;
+    bottom: 32vh;  /* Adjust for PWA standalone mode */
+    left: 52%;
     width: 54vh;
   }
 }
