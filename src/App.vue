@@ -129,9 +129,6 @@ export default {
     document.removeEventListener("visibilitychange", this._onVisibilityChange);
     window.removeEventListener("pagehide", this._onPageHide);
     window.removeEventListener("blur", this._onBlur);
-    if (typeof this._removeAfterEach === "function") {
-      this._removeAfterEach();
-    }
   },
   methods: {
     redirect(target) {
@@ -189,10 +186,7 @@ export default {
       window.addEventListener("pagehide", this._onPageHide, { passive: true });
       window.addEventListener("blur", this._onBlur, { passive: true });
 
-      // also stop when navigating between routes
-      if (this.$router?.afterEach) {
-        this._removeAfterEach = this.$router.afterEach(() => this.stopMusic());
-      }
+      // Music will now continue playing across views until manually stopped
     },
 
     stopMusic() {
