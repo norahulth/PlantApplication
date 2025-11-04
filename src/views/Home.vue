@@ -26,6 +26,20 @@
         class="gubbs-img"
       />
 
+      <!-- Gubbs Speech Bubble -->
+      <div 
+        class="gubbs-speech-bubble" 
+        :class="{ expanded: speechBubbleExpanded }"
+        @click.stop="toggleSpeechBubble"
+      >
+        <div v-if="speechBubbleExpanded" class="speech-bubble-content">
+          <div class="speech-bubble-text">
+            Hi there! My name is Gubbs and I will soon help you take care of your plants
+          </div>
+        </div>
+        <div v-else class="speech-bubble-icon">💬</div>
+      </div>
+
 
       <!-- Plants -->
       <div
@@ -161,6 +175,7 @@ export default {
       isBlinking: false, // Gubbs
       blinkTimer: null, 
       unblinkTimer: null, // Gubbs
+      speechBubbleExpanded: false, // Gubbs speech bubble state
     }
   },
   computed: {
@@ -230,6 +245,7 @@ export default {
       this.actionId = null
       this.draggingId = null
       this.bubbleExpanded = false // Close bubble when clicking elsewhere
+      this.speechBubbleExpanded = false // Close speech bubble when clicking elsewhere
     },
     showInfo(id) {
       this.infoPlantId = id
@@ -240,6 +256,9 @@ export default {
     },
     toggleBubble() {
       this.bubbleExpanded = !this.bubbleExpanded
+    },
+    toggleSpeechBubble() {
+      this.speechBubbleExpanded = !this.speechBubbleExpanded
     },
     deletePlant(id) { 
       this.deleteConfirmId = id
@@ -1019,6 +1038,104 @@ export default {
     bottom: 29vh;  /* Adjust for PWA standalone mode */
     left: 52%;
     width: 54vh;
+  }
+}
+
+/* Gubbs Speech Bubble */
+.gubbs-speech-bubble {
+  position: absolute;
+  bottom: 410px;
+  left: 46%;
+  cursor: pointer;
+  z-index: 100;
+}
+
+/* Small speech bubble icon */
+.speech-bubble-icon {
+  font-size: 32px;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+  transition: transform 0.2s ease;
+}
+
+.gubbs-speech-bubble:hover .speech-bubble-icon {
+  transform: scale(1.15);
+}
+
+/* Expanded speech bubble content */
+.speech-bubble-content {
+  background: white;
+  padding: 16px 20px;
+  border-radius: 20px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+  position: relative;
+  width: 300px;
+  animation: expandBubble 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.speech-bubble-content::before {
+  content: '';
+  position: absolute;
+  bottom: -15px;
+  left: 20px;
+  width: 0;
+  height: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-top: 20px solid white;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+}
+
+.speech-bubble-text {
+  font-size: 15px;
+  line-height: 1.5;
+  color: #1f2937;
+  text-align: center;
+  font-weight: 500;
+}
+
+@keyframes expandBubble {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .gubbs-speech-bubble {
+    bottom: 50vh;
+    left: 49%;
+  }
+  
+  .speech-bubble-icon {
+    font-size: 28px;
+  }
+  
+  .speech-bubble-content {
+    width: 200px;
+    padding: 14px 16px;
+  }
+  
+  .speech-bubble-content::before {
+    left: 20px;
+  }
+  
+  .speech-bubble-text {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 640px) and (display-mode: standalone) {
+  .gubbs-speech-bubble {
+    bottom: 55vh;
+    left: 46%;
+  }
+  
+  .speech-bubble-content::before {
+    left: 20px;
   }
 }
 </style>
