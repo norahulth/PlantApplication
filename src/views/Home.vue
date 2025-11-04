@@ -1007,8 +1007,8 @@ export default {
 
 @media (max-width: 640px) {
   .gubbs-img {
-    width: 250px;
-    bottom: 130px;
+    bottom: 21vh;  /* Same relative position as desktop */
+    width: 41vh;   /* Same relative size as desktop */
   }
 }
 </style>
