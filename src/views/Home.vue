@@ -533,8 +533,8 @@ export default {
   color: #0f172a;
   text-shadow: 0 1px 2px rgba(255,255,255,0.7);
 }
-.label .name { font-weight: 700; font-size: 16px; }
-.label .species { opacity: 0.75; font-size: 14px; }
+.label .name { font-weight: 700; font-size: 16px; white-space: nowrap; }
+.label .species { opacity: 0.75; font-size: 14px; white-space: nowrap; }
 
 /* Action menu */
 .action-menu {
