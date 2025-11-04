@@ -18,6 +18,14 @@
         draggable="false"
         @load="onBgLoad"
       />
+    
+      <!-- Gubbs -->
+      <img
+        :src="isBlinking ? '/Gubbs-blinking.png' : '/Gubbs.png'"
+        alt="Gubbs"
+        class="gubbs-img"
+      />
+
 
       <!-- Plants -->
       <div
@@ -150,6 +158,9 @@ export default {
       isTouchDevice: false,  // detect if touch device
       infoPlantId: null,     // plant id for info popup
       deleteConfirmId: null, // plant id for delete confirmation
+      isBlinking: false, // Gubbs
+      blinkTimer: null, 
+      unblinkTimer: null, // Gubbs
     }
   },
   computed: {
@@ -174,9 +185,12 @@ export default {
       this.$store.dispatch('setAllUnwatered')
     })
     window.addEventListener('resize', this.updateRoomSize, { passive: true })
+    this.startBlinkLoop() //  Gubbs
   },
   beforeUnmount() {
     window.removeEventListener('resize', this.updateRoomSize)
+    clearTimeout(this.blinkTimer) //  Gubbs
+    clearTimeout(this.unblinkTimer) // Gubbs
   },
   methods: {
     onBgLoad() { this.updateRoomSize() },
@@ -411,6 +425,35 @@ export default {
           this.$store.dispatch('updatePlantPosition', { id: p.id, x: xPct, y: yPct })
         }
       })
+    },
+     // for Gubbs
+    startBlinkLoop() {
+      const loop = () => {
+        const waitMs = 2000 + Math.random() * 5000 // 2–7s between blinks
+
+        this.blinkTimer = setTimeout(() => {
+          this.isBlinking = true
+          const blinkMs = 120 + Math.random() * 60 // blink lasts 0.15s
+
+          this.unblinkTimer = setTimeout(() => {
+            this.isBlinking = false
+
+            // 10% chance for a double blink
+            if (Math.random() < 0.1) {
+              setTimeout(() => {
+                this.isBlinking = true
+                setTimeout(() => {
+                  this.isBlinking = false
+                  loop()
+                }, 120)
+              }, 120)
+            } else {
+              loop()
+            }
+          }, blinkMs)
+        }, waitMs)
+      }
+      loop()
     },
   }
 }
@@ -946,6 +989,26 @@ export default {
   
   .confirm-btn {
     width: 100%;
+  }
+}
+
+/* Gubbs */
+.gubbs-img {
+  position: absolute;
+  bottom: 210px;
+  left: 52%;
+  transform: translateX(-50%);
+  width: 410px;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.25));
+}
+
+@media (max-width: 640px) {
+  .gubbs-img {
+    width: 250px;
+    bottom: 130px;
   }
 }
 </style>
