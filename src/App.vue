@@ -94,8 +94,8 @@
       </button>
     </div>
 
-    <!-- Audio element (preload so playback is instant even after reloads) -->
-    <audio ref="bgMusic" :src="musicSrc" loop preload="auto"></audio>
+    <!-- Audio element (bind src so we can clear it when stopping) -->
+    <audio ref="bgMusic" :src="musicSrc" loop></audio>
   </div>
 </template>
 
@@ -219,6 +219,14 @@ export default {
         }
       } catch {}
 
+      // clear src to force the OS to release the session immediately (helps on iOS PWAs)
+      try {
+        if (this.musicSrc) {
+          this.musicSrc = ""; // unbinds audio file
+          audio.load();
+        }
+      } catch {}
+
       this.isPlaying = false;
     },
 
@@ -233,11 +241,6 @@ export default {
         if (!this.musicSrc) {
           this.musicSrc = DEFAULT_MUSIC_SRC;
           audio.load();
-        }
-        if (audio.readyState === 0) {
-          try {
-            audio.load();
-          } catch {}
         }
         audio.currentTime = 0;
 
