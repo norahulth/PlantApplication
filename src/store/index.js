@@ -37,7 +37,7 @@ const save = (k, v) => localStorage.setItem(k, JSON.stringify(v))
 
 export default createStore({
   state: () => ({
-    plants: [],
+    plants: load('plants', []),
     tempPlant: load('tempPlant', null),
     loading: false,
     error: null,
@@ -49,6 +49,7 @@ export default createStore({
   mutations: {
     setPlants(state, plants) {
       state.plants = plants
+      save('plants', plants)
     },
     setLoading(state, loading) {
       state.loading = loading
@@ -67,28 +68,31 @@ export default createStore({
   },
   actions: {
     // Load plants from Upstash
-    async loadPlants({ commit, state, dispatch }) {
+    async loadPlants({ commit, dispatch }) {
+      commit('setLoading', true)
+      commit('setError', null)
+
+      const localPlants = load('plants', [])
+      commit('setPlants', localPlants)
+
       try {
-        commit('setLoading', true)
-        commit('setError', null)
         const data = await apiCall('GET', `/api/plants?userId=${userId}`)
         const fetchedPlants = data.plants || []
-        
-        // If no plants found for this userId but there are existing plants in the store
-        // Connect the existing plants to this userId instead of removing them
-        if (fetchedPlants.length === 0 && state.plants.length > 0) {
-          console.log('🔗 Connecting existing plants to userId:', userId)
-          await dispatch('savePlants')
-          // Keep existing plants in the store
-        } else {
+
+        if (fetchedPlants.length === 0) {
+          if (localPlants.length > 0) {
+            console.log('🔗 Syncing local plants to userId:', userId)
+            await dispatch('savePlants')
+          }
+        } else if (localPlants.length === 0) {
           commit('setPlants', fetchedPlants)
+        } else {
+          console.log('💾 Local plants kept as source of truth; remote data available for backup.')
+          await dispatch('savePlants')
         }
       } catch (error) {
         console.error('Failed to load plants:', error)
         commit('setError', error.message)
-        // Fallback to localStorage if API fails
-        const localPlants = load('plants', [])
-        commit('setPlants', localPlants)
       } finally {
         commit('setLoading', false)
       }
@@ -96,12 +100,11 @@ export default createStore({
 
     // Save plants to Upstash
     async savePlants({ state }) {
+      save('plants', state.plants)
       try {
         await apiCall('POST', '/api/plants', { plants: state.plants })
       } catch (error) {
         console.error('Failed to save plants:', error)
-        // Fallback: save to localStorage
-        save('plants', state.plants)
       }
     },
 
