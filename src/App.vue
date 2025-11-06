@@ -123,6 +123,7 @@ export default {
   mounted() {
     this.maybeShowPushPrompt();
     this.setupLifecycleListeners();
+    this.lockOrientation();
   },
   beforeUnmount() {
     // remove listeners
@@ -133,6 +134,15 @@ export default {
   methods: {
     redirect(target) {
       this.$router.push(target).catch((e) => console.log(e.message));
+    },
+
+    lockOrientation() {
+      // Lock screen orientation to portrait on mobile devices
+      if (screen?.orientation?.lock) {
+        screen.orientation.lock('portrait').catch(err => {
+          console.log('Orientation lock not supported or failed:', err);
+        });
+      }
     },
 
     async maybeShowPushPrompt() {
