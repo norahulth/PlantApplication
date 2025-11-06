@@ -207,10 +207,12 @@ export default {
       this.updateRoomSize()
     })
     window.addEventListener('resize', this.updateRoomSize, { passive: true })
+    document.addEventListener('visibilitychange', this.handleVisibilityChange, { passive: true })
     this.startBlinkLoop() //  Gubbs
   },
   beforeUnmount() {
     window.removeEventListener('resize', this.updateRoomSize)
+    document.removeEventListener('visibilitychange', this.handleVisibilityChange)
     clearTimeout(this.blinkTimer) //  Gubbs
     clearTimeout(this.unblinkTimer) // Gubbs
   },
@@ -260,6 +262,11 @@ export default {
     },
     closeInfo() {
       this.infoPlantId = null
+    },
+    handleVisibilityChange() {
+      if (document.visibilityState === 'visible') {
+        this.$store.dispatch('refreshWateredStates')
+      }
     },
     formatLastWatered(plant) {
       if (!plant || !plant.lastWateredAt) return 'Not watered yet'
