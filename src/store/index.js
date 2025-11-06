@@ -116,6 +116,10 @@ export default createStore({
       }
     },
 
+    refreshWateredStates({ state, commit }) {
+      commit('setPlants', state.plants)
+    },
+
     // Save plants to Upstash
     async savePlants({ state }) {
       save('plants', state.plants)

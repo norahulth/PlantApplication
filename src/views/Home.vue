@@ -202,6 +202,7 @@ export default {
     this.isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
     
     this.roomHeight = window.innerHeight
+    this.$store.dispatch('refreshWateredStates')
     this.$nextTick(() => {
       this.updateRoomSize()
     })
