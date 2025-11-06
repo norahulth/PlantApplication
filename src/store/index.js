@@ -35,7 +35,7 @@ const load = (k, fallback) => {
 }
 const save = (k, v) => localStorage.setItem(k, JSON.stringify(v))
 
-const WATER_RESET_MS = 24 * 60 * 60 * 1000 // 24 hours
+const WATER_RESET_MS = 5 * 60 * 1000 // 24 hours
 
 const normalizePlants = (plants) => {
   const now = Date.now()
