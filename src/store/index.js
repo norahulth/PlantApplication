@@ -35,9 +35,26 @@ const load = (k, fallback) => {
 }
 const save = (k, v) => localStorage.setItem(k, JSON.stringify(v))
 
+const WATER_RESET_MS = 24 * 60 * 60 * 1000 // 24 hours
+
+const normalizePlants = (plants) => {
+  const now = Date.now()
+
+  return plants.map(plant => {
+    const lastWateredAt = typeof plant.lastWateredAt === 'number' ? plant.lastWateredAt : 0
+    const watered = lastWateredAt && now - lastWateredAt < WATER_RESET_MS
+
+    return {
+      ...plant,
+      lastWateredAt,
+      watered,
+    }
+  })
+}
+
 export default createStore({
   state: () => ({
-    plants: load('plants', []),
+    plants: normalizePlants(load('plants', [])),
     tempPlant: load('tempPlant', null),
     loading: false,
     error: null,
@@ -48,8 +65,9 @@ export default createStore({
   },
   mutations: {
     setPlants(state, plants) {
-      state.plants = plants
-      save('plants', plants)
+      const normalized = normalizePlants(plants)
+      state.plants = normalized
+      save('plants', normalized)
     },
     setLoading(state, loading) {
       state.loading = loading
@@ -131,7 +149,7 @@ export default createStore({
     },
 
     async setAllUnwatered({ state, commit, dispatch }) {
-      const updated = state.plants.map(p => ({ ...p, watered: false }))
+      const updated = state.plants.map(p => ({ ...p, watered: false, lastWateredAt: 0 }))
       commit('setPlants', updated)
       await dispatch('savePlants')
     },
@@ -139,8 +157,9 @@ export default createStore({
     async waterPlant({ state, commit, dispatch }, id) {
       const i = state.plants.findIndex(p => p.id === id)
       if (i !== -1) {
+        const now = Date.now()
         const updated = [...state.plants]
-        updated[i] = { ...updated[i], watered: true }
+        updated[i] = { ...updated[i], watered: true, lastWateredAt: now }
         commit('setPlants', updated)
         await dispatch('savePlants')
       }

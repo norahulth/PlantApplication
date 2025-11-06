@@ -116,6 +116,13 @@
               </div>
             </div>
             <div class="info-item">
+              <span class="info-icon">⏰</span>
+              <div>
+                <strong>Last watered:</strong>
+                <p>{{ formatLastWatered(infoPlant) }}</p>
+              </div>
+            </div>
+            <div class="info-item">
               <span class="info-icon">☀️</span>
               <div>
                 <strong>Sunlight:</strong>
@@ -197,7 +204,6 @@ export default {
     this.roomHeight = window.innerHeight
     this.$nextTick(() => {
       this.updateRoomSize()
-      this.$store.dispatch('setAllUnwatered')
     })
     window.addEventListener('resize', this.updateRoomSize, { passive: true })
     this.startBlinkLoop() //  Gubbs
@@ -253,6 +259,18 @@ export default {
     },
     closeInfo() {
       this.infoPlantId = null
+    },
+    formatLastWatered(plant) {
+      if (!plant || !plant.lastWateredAt) return 'Not watered yet'
+      const ts = Number(plant.lastWateredAt)
+      if (!ts) return 'Not watered yet'
+      const date = new Date(ts)
+      if (Number.isNaN(date.getTime())) return 'Not watered yet'
+      try {
+        return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(date)
+      } catch {
+        return date.toLocaleString()
+      }
     },
     toggleBubble() {
       this.bubbleExpanded = !this.bubbleExpanded

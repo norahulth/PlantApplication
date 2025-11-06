@@ -151,6 +151,7 @@ async function save() {
     x: Math.round(10 + Math.random() * 80),
     y: Math.round(10 + Math.random() * 70),
     watered: false,
+    lastWateredAt: 0,
     water: care.value.water,
     sun: care.value.sun
   }
