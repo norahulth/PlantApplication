@@ -234,6 +234,11 @@ export default {
           this.musicSrc = DEFAULT_MUSIC_SRC;
           audio.load();
         }
+        if (audio.readyState === 0) {
+          try {
+            audio.load();
+          } catch {}
+        }
         audio.currentTime = 0;
 
         audio.play().then(() => {
