@@ -94,8 +94,8 @@
       </button>
     </div>
 
-    <!-- Audio element (bind src so we can clear it when stopping) -->
-    <audio ref="bgMusic" :src="musicSrc" loop></audio>
+    <!-- Audio element (preload so playback is instant even after reloads) -->
+    <audio ref="bgMusic" :src="musicSrc" loop preload="auto"></audio>
   </div>
 </template>
 
@@ -216,14 +216,6 @@ export default {
           navigator.mediaSession.metadata = null;
           ["play","pause","seekbackward","seekforward","previoustrack","nexttrack"]
             .forEach(a => { try { navigator.mediaSession.setActionHandler(a, null); } catch {} });
-        }
-      } catch {}
-
-      // clear src to force the OS to release the session immediately (helps on iOS PWAs)
-      try {
-        if (this.musicSrc) {
-          this.musicSrc = ""; // unbinds audio file
-          audio.load();
         }
       } catch {}
 
