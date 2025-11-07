@@ -2,6 +2,8 @@
 
 A Vue-based web application that helps users care for their plants with timely watering notifications, a simple setup for adding new plants, and stored information tailored to each specific plant. This repository contains the client application, supporting API endpoints, and build configuration for deployment via Vercel.
 
+Note: The watering timer is currently set to 5 minutes for demonstration purposes, but can be adjusted to any schedule and tailored for each plant in the store/index.js file.
+
 ## Table of Contents
 - Overview
 - Getting Started
