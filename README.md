@@ -68,11 +68,6 @@ PlantApplication/
 └── README.md
 ```
 
-## Linting & Quality
-- Run `npm run lint` regularly to catch issues early.
-- Most problems can be fixed automatically with `npm run lint:fix`.
-- Review lint output and commit fixes to maintain consistency.
-
 ## Deployment
 - The repository includes a `vercel.json` file configured for deployment on Vercel.
 - Ensure environment variables (if any) are configured in Vercel before deploying.
