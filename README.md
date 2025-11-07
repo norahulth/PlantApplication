@@ -1,6 +1,6 @@
 # Plant Application
 
-A Vue-based web application users care for their plants with timely watering notifications, a simple setup for adding new plants, and stored information tailored to each specific plant. This repository contains the client application, supporting API endpoints, and build configuration for deployment via Vercel.
+A Vue-based web application that helps users care for their plants with timely watering notifications, a simple setup for adding new plants, and stored information tailored to each specific plant. This repository contains the client application, supporting API endpoints, and build configuration for deployment via Vercel.
 
 ## Table of Contents
 - Overview
